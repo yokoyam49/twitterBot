@@ -1,16 +1,17 @@
 <?php
-require_once("../conf.php");
+
+use Abraham\TwitterOAuth\TwitterOAuth;
 
 class search_tweets
 {
 	private $twObj;
-	private $ApiUrl = 'https://api.twitter.com/1.1/search/tweets.json';
+	private $ApiUrl = 'search/tweets';
 	
 	private $SearchArr = array();
 	private $Response = null;
 	private $Options = array();
 	
-	public __construct()
+	public function __construct()
 	{
 		$this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
 		
@@ -37,14 +38,16 @@ class search_tweets
 	public function Request()
 	{
 		$this->Options['q'] = implode(' AND ', $this->SearchArr);
-		
-		$res = $this->twObj->OAuthRequest(
-		    $this->ApiUrl,
-		    'GET',
-		    $this->Options
+
+		$res = $this->twObj->get(
+			$this->ApiUrl,
+			$this->Options
 		);
 		
-		$this->Response = json_decode($res, true);
+		//$res = $this->twObj->post("statuses/update", array("status" => "テストメッセージ"));
+		
+		//$this->Response = json_decode($res, true);
+		$this->Response = $res;
 		
 		return $this->Response;
 	}
