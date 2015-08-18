@@ -4,7 +4,7 @@ require_once(_TWITTER_API_PATH."search/search_tweets.php");
 
 $SearchTweets_obj = new search_tweets();
 
-$res = $SearchTweets_obj->setSearchArr(array('beeworks'))->setOption(array('count'=>'10'))->Request();
+$res = $SearchTweets_obj->setSearchArr('beeworks')->setOption(array('count'=>'10'))->Request();
 
 //var_dump($res);
 

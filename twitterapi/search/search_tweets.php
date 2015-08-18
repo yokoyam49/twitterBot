@@ -7,7 +7,7 @@ class search_tweets
 	private $twObj;
 	private $ApiUrl = 'search/tweets';
 	
-	private $SearchArr = array();
+	private $SearchStr = '';
 	private $Response = null;
 	private $Options = array();
 	
@@ -17,9 +17,9 @@ class search_tweets
 		
 	}
 	
-	public function setSearchArr($search_arr)
+	public function setSearchStr($search)
 	{
-		$this->SearchArr = $search_arr;
+		$this->SearchStr = $search;
 		return $this;
 	}
 	
@@ -37,7 +37,7 @@ class search_tweets
 	//ŽÀs
 	public function Request()
 	{
-		$this->Options['q'] = implode(' AND ', $this->SearchArr);
+		$this->Options['q'] = $this->SearchStr;
 
 		$res = $this->twObj->get(
 			$this->ApiUrl,
