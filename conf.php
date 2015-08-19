@@ -6,7 +6,8 @@ define('_SYSTEM_ROOT', '/var/www/html/');
 define('_TWITTER_OAUTH_PATH', _SYSTEM_ROOT.'twitteroauth/');
 //twitterapi
 define('_TWITTER_API_PATH', _SYSTEM_ROOT.'twitterapi/');
-
+//class
+define('_TWITTER_CLASS_PATH', _SYSTEM_ROOT.'class/');
 
 //require
 //require_once(_TWITTER_OAUTH_PATH."src/TwitterOAuth.php");
