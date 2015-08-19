@@ -61,7 +61,11 @@ class Cron_Tweets_Popularity
             }
             unset($apiErrorObj);
 
-            $tweetsData = array_merge($tweetsData, $res->statuses);
+            //確実に結合するためforeachで
+            foreach($res->statuses as $tweet){
+                $tweetsData[] = $tweet;
+            }
+            //$tweetsData = array_merge($tweetsData, $res->statuses);
 
             if($res->search_metadata->count < $this->Count){
                 break;
@@ -71,7 +75,8 @@ class Cron_Tweets_Popularity
         }
 
         //並び替え
-        usort($tweetsData, array($this, 'usortRetweetCountCmp'));
+        $tweetsData = $this->multisortRetweetCount($tweetsData);
+        //usort($tweetsData, array($this, 'usortRetweetCountCmp'));
         $this->Search_Res = $tweetsData;
 
         return $this;
@@ -83,7 +88,16 @@ class Cron_Tweets_Popularity
         if ($a_reco == $b_reco) {
             return 0;
         }
-        return ($a_reco < $b_reco) ? -1 : 1;
+        return ($a_reco > $b_reco) ? -1 : 1;
+    }
+
+    private function multisortRetweetCount($tweetsData){
+        $cmplist = array();
+        foreach($tweetsData as $tweet){
+            $cmplist[] = $tweet->retweet_count;
+        }
+        array_multisort($cmplist, SORT_DESC, $tweetsData);
+        return $tweetsData;
     }
 
 
