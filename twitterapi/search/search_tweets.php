@@ -11,10 +11,13 @@ class search_tweets
 	private $Response = null;
 	private $Options = array();
 	
-	public function __construct()
+	public function __construct($CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
 	{
-		$this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
-		
+		if(!is_null($CONSUMER_KEY) and !is_null($CONSUMER_SECRET) and !is_null($ACCESS_TOKEN) and !is_null($ACCESS_TOKEN_SECRET)){
+			$this->twObj = new TwitterOAuth($CONSUMER_KEY, $CONSUMER_SECRET, $ACCESS_TOKEN, $ACCESS_TOKEN_SECRET);
+		}else{
+			$this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
+		}
 	}
 	
 	public function setSearchStr($search)

@@ -24,12 +24,26 @@ class Cron_Tweets_Popularity
     //検索結果
     private $Search_Res;
 
+    // 認証情報 ==========
+    private $CONSUMER_KEY = null;
+    private $CONSUMER_SECRET = null;
+    private $ACCESS_TOKEN = null;
+    private $ACCESS_TOKEN_SECRET = null;
+
 
     public function setInit($SearchStr, $Until_Time, $Count)
     {
         $this->SearchStr = $SearchStr;
         //$this->Until_Time = $Until_Time;
         $this->Count = $Count;
+    }
+
+    //認証セット
+    public function setAuthInfo($CONSUMER_KEY, $CONSUMER_SECRET, $ACCESS_TOKEN, $ACCESS_TOKEN_SECRET){
+        $this->CONSUMER_KEY = $CONSUMER_KEY;
+        $this->CONSUMER_SECRET = $CONSUMER_SECRET;
+        $this->ACCESS_TOKEN = $ACCESS_TOKEN;
+        $this->ACCESS_TOKEN_SECRET = $ACCESS_TOKEN_SECRET;
     }
 
     public function Exec()
