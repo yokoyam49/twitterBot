@@ -72,7 +72,9 @@ class Cron_Tweets_Popularity
 
         //並び替え
         usort($tweetsData, array($this, 'usortRetweetCountCmp'));
+        $this->Search_Res = $tweetsData;
 
+        return $this;
     }
 
     private function usortRetweetCountCmp($a, $b){
