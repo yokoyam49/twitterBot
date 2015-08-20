@@ -1,7 +1,5 @@
 <?php
 
-use Abraham\TwitterOAuth\TwitterOAuth;
-
 class search_tweets
 {
 	private $twObj;
@@ -11,13 +9,9 @@ class search_tweets
 	private $Response = null;
 	private $Options = array();
 	
-	public function __construct($CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
+	public function __construct($twObj)
 	{
-		if(!is_null($CONSUMER_KEY) and !is_null($CONSUMER_SECRET) and !is_null($ACCESS_TOKEN) and !is_null($ACCESS_TOKEN_SECRET)){
-			$this->twObj = new TwitterOAuth($CONSUMER_KEY, $CONSUMER_SECRET, $ACCESS_TOKEN, $ACCESS_TOKEN_SECRET);
-		}else{
-			$this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
-		}
+		$this->twObj = $twObj;
 	}
 	
 	public function setSearchStr($search)
