@@ -133,7 +133,11 @@ class Cron_Tweets_Popularity
                 break;
             }
 
-            $max_id = $res->search_metadata->max_id;
+            $max_id = $this->getMaxId($res);
+            if(!$max_id){
+                $mes = "MaxId取得失敗";
+                throw new Exception($mes);
+            }
         }
 
         //並び替え
@@ -142,6 +146,23 @@ class Cron_Tweets_Popularity
         $this->Search_Res = $tweetsData;
 
         return $this;
+    }
+
+    //MaxID取得
+    private function getMaxId($recs)
+    {
+        $next_results = $recs->search_metadata->next_results;
+        $next_results = htmlspecialchars_decode($next_results);
+        $next_results = str_replace("?", "", $next_results);
+        $next_results = urldecode($next_results);
+        $qus = explode("&", $next_results);
+        foreach($qus as $qu){
+            list($name, $value) = explode("=", $qu);
+            if($name == "max_id" and strlen($value)){
+                return $value;
+            }
+        }
+        return false;
     }
 
     private function Retweets($id){
