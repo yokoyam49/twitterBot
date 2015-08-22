@@ -14,14 +14,15 @@ class Cron_Tweets_Popularity
     private $SearchStr;
     //指定時間より過去のを取得（現在からの秒数指定）※時間指定できないっぽいので中止
     //private $Until_Time;
-    //一回に取得する件数
-    private $Count;
+    //全取得件数
+    private $MaxCount;
+    //trueのときリツイートを実行しない
     private $viewMode = false;
 
     // 固定設定======
     private $Result_Type = 'mixed';
-    //全取得件数
-    private $MaxCount = 100;
+    //一回に取得する件数
+    private $Count = 100;
     //cron何秒毎実行かをセット 重複を取得しないために設定
     private $Bitween_Time = 3600;
     //既にリツイート済みでないか確認する時、ホームタイムライン幾つまでさかのぼってチェックするか
@@ -38,6 +39,7 @@ class Cron_Tweets_Popularity
     private $twObj;
 
     // 認証情報 ==========
+    private $SCREEN_NAME = null;
     private $CONSUMER_KEY = null;
     private $CONSUMER_SECRET = null;
     private $ACCESS_TOKEN = null;
@@ -45,8 +47,13 @@ class Cron_Tweets_Popularity
 
     private $logFile;
 
-    public function __construct($CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
+    public function __construct($SCREEN_NAME = null, $CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
     {
+    	if(!is_null($SCREEN_NAME)){
+    		$this->SCREEN_NAME = $SCREEN_NAME;
+    	}else{
+    		$this->SCREEN_NAME = SCREEN_NAME;
+    	}
         if(!is_null($CONSUMER_KEY) and !is_null($CONSUMER_SECRET) and !is_null($ACCESS_TOKEN) and !is_null($ACCESS_TOKEN_SECRET)){
             $this->twObj = new TwitterOAuth($CONSUMER_KEY, $CONSUMER_SECRET, $ACCESS_TOKEN, $ACCESS_TOKEN_SECRET);
         }else{
@@ -56,11 +63,10 @@ class Cron_Tweets_Popularity
         $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
-    public function setInit($SearchStr, $Until_Time, $Count)
+    public function setInit($SearchStr, $MaxCount)
     {
         $this->SearchStr = $SearchStr;
-        //$this->Until_Time = $Until_Time;
-        $this->Count = $Count;
+        $this->MaxCount = $MaxCount;
         return $this;
     }
     public function setViewMode(){
@@ -231,6 +237,9 @@ class Cron_Tweets_Popularity
         foreach($this->TimeLine_List as $line){
             if(!isset($line->retweeted_status)){
                 continue;
+            }
+            if($line->user->screen_name != $this->SCREEN_NAME){
+            	continue;
             }
             if($line->retweeted_status->id == $id){
                 return false;
