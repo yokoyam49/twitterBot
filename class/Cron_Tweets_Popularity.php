@@ -18,7 +18,7 @@ class Cron_Tweets_Popularity
     private $Count;
 
     // 固定設定======
-    private $Result_Type = 'recent';
+    private $Result_Type = 'mixed';
     //全取得件数
     private $MaxCount = 100;
     //cron何秒毎実行かをセット 重複を取得しないために設定
@@ -235,8 +235,8 @@ class Cron_Tweets_Popularity
         $cmplist1 = array();
         $cmplist2 = array();
         foreach($tweetsData as $tweet){
-            $cmplist1[] = $tweet->favorite_count;
-            $cmplist2[] = $tweet->retweet_count;
+            $cmplist1[] = $tweet->retweet_count;
+            $cmplist2[] = $tweet->favorite_count;
         }
         array_multisort(
         				$cmplist1, SORT_DESC,
