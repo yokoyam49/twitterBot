@@ -1,0 +1,11 @@
+・アカウントごとの動作等に関する情報テーブル
+dt_account_action
+
+
+○フィールド
+id	INT,key,auto_increment
+account_id 	INT	アカウント管理テーブルID
+search_str_1	TEXT	人気ツイート検索時文字列
+search_str_2	TEXT
+search_str_3	TEXT
+follower_num	INT	現在のフォロワー数

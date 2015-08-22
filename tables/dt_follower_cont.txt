@@ -1,0 +1,20 @@
+・フォロワー管理テーブル
+dt_follower_cont
+
+※twitterの各種IDは桁数が多いので桁あふれを考慮し、
+数値型ではなく文字列型で格納
+
+
+○フィールド
+id	INT,key,auto_increment
+account_id 	INT	アカウント管理テーブルID
+user_id		VARCHAR(255)	フォロー相手ユーザーID
+following	TINYINT(1)	自分が相手をフォローしているか　してる:1 してない:0
+following_date	DATETIME	フォローした日時
+followed	TINYINT(1)	相手が自分をフォローしているか
+followed_date	DATETIME	フォローされた(のが判明した)日時
+removing_date	DATETIME	リムーブした日時
+removed_date	DATETIME	リムーブされた(のが判明した)日時
+notice		TEXT		備考
+create_date	DATETIME
+update_date	DATETIME
