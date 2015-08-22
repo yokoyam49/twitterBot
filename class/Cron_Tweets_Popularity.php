@@ -16,6 +16,7 @@ class Cron_Tweets_Popularity
     //private $Until_Time;
     //一回に取得する件数
     private $Count;
+    private $viewMode = false;
 
     // 固定設定======
     private $Result_Type = 'mixed';
@@ -27,7 +28,9 @@ class Cron_Tweets_Popularity
     private $checkHomeTimeline_Num = 50;
 
     //検索結果
-    public $Search_Res;
+    private $Search_Res;
+    //リツイートするID
+    private $TweetId;
     //タイムライン重複チェック用
     private $TimeLine_List = null;
 
@@ -50,7 +53,7 @@ class Cron_Tweets_Popularity
             $this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
         }
 
-        $this->logFile = 'log_CronTweetsPopularity_'.date("Y_m_d").".log";
+        $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
     public function setInit($SearchStr, $Until_Time, $Count)
@@ -59,6 +62,16 @@ class Cron_Tweets_Popularity
         //$this->Until_Time = $Until_Time;
         $this->Count = $Count;
         return $this;
+    }
+    public function setViewMode(){
+    	$this->viewMode = true;
+    	return $this;
+    }
+    public function getSearch_Res(){
+    	return $this->Search_Res;
+    }
+    public function getTweetId(){
+    	return $this->TweetId;
     }
 
     //認証セット
@@ -91,7 +104,11 @@ class Cron_Tweets_Popularity
                 throw new Exception($mes);
             }
             //リツイート
-            //$this->Retweets($tweetId);
+            //viewModeのときはツイートしない
+            if(!$this->viewMode){
+            	$this->Retweets($tweetId);
+            }
+            $this->TweetId = $tweetId;
 
         }catch(Exception $e){
             //ログ出力
