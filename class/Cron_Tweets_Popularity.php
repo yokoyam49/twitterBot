@@ -26,7 +26,7 @@ class Cron_Tweets_Popularity
     //cron何秒毎実行かをセット 重複を取得しないために設定
     private $Bitween_Time = 3600;
     //既にリツイート済みでないか確認する時、ホームタイムライン幾つまでさかのぼってチェックするか
-    private $checkHomeTimeline_Num = 50;
+    private $checkHomeTimeline_Num = 200;
 
     //検索結果
     private $Search_Res;
