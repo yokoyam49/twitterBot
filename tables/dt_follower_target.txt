@@ -1,0 +1,11 @@
+フォローターゲットテーブル
+dt_follower_target
+
+ターゲットのユーザーのフォロワーに対して、
+フォローを投げていく
+
+○フィールド
+id		INT,key,auto_increment
+account_id 	INT		アカウント管理テーブルID
+target_user_id	VARCHAR(255)	このユーザーIDをフォローしているユーザーに対してフォローを投げていく
+target_screen_name	VARCHAR(255)	同上のスクリーンネーム
