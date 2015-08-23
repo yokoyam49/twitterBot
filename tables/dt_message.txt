@@ -1,0 +1,16 @@
+・メッセージテーブル
+dt_message
+
+各アカウントに対するメッセージを格納するテーブル
+例）フォローしにいく対象すべてにアタックかけ終わった、とか
+
+
+○フィールド
+id		INT,key,auto_increment
+account_id 	INT	アカウント管理テーブルID
+message1	TEXT	メッセージ内容
+message2	TEXT
+message3	TEXT
+check_flg	TINYINT(1)	チェックフラグ
+create_date	TIMESTAMP
+update_date	TIMESTAMP
