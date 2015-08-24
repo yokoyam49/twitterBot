@@ -41,7 +41,8 @@ class MS_Account
     //指定IDアカウント取得
     public function getAccountById($id)
     {
-        return $this->DBobj->find('ms_account', $id);
+        $res = $this->DBobj->find('ms_account', $id);
+        return $res[0];
     }
 
 }

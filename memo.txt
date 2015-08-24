@@ -9,3 +9,7 @@
 └ターゲットIDからまだアタックしていないのを抽出
 └フォローしする
 
+
+cron
+/usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/popularity.php
+

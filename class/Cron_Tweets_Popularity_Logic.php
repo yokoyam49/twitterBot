@@ -39,13 +39,13 @@ class Cron_Tweets_Popularity_Logic
     //OAuthオブジェクト
     private $twObj;
     //DBオブジェクト
-    private $DBObj;
+    private $DBobj;
 
     private $logFile;
 
     public function __construct()
     {
-        $this->DBObj = new DB_Base();
+        $this->DBobj = new DB_Base();
         $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
@@ -64,9 +64,7 @@ class Cron_Tweets_Popularity_Logic
 
         $MS_AccountObj = new MS_Account();
         $this->AccountInfo = $MS_AccountObj->getAccountById($id);
-        if(!is_null($this->twObj)){
-            unset($this->twObj);
-        }
+
         $this->twObj = new TwitterOAuth(
                                 $this->AccountInfo->consumer_key,
                                 $this->AccountInfo->consumer_secret,
@@ -82,7 +80,8 @@ class Cron_Tweets_Popularity_Logic
     {
         //検索オプション取得
         $sql = "SELECT search_str_1, result_type FROM dt_search_action WHERE account_id = ?";
-        $this->SerchAction = $this->DBobj->query($sql, array($this->Account_ID));
+        $res = $this->DBobj->query($sql, array($this->Account_ID));
+        $this->SerchAction = $res[0];
         //リツイートリスト取得
         $sql = "SELECT tweet_id, create_date FROM dt_retweet_list WHERE account_id = ?";
         $this->RetweetedList = $this->DBobj->query($sql, array($this->Account_ID));
@@ -138,11 +137,11 @@ class Cron_Tweets_Popularity_Logic
         $tweetId = null;
         $overlapID_Arr = array();
         foreach($this->Search_Res as $tweet){
-            if($this->checkRetweeted($tweet->id)){
-                $tweetId = $tweet->id;
+            if($this->checkRetweeted((string)$tweet->id)){
+                $tweetId = (string)$tweet->id;
                 break;
             }
-            $overlapID_Arr[] = $tweet->id;
+            //$overlapID_Arr[] = $tweet->id;
         }
 
         return $tweetId;
@@ -235,7 +234,7 @@ class Cron_Tweets_Popularity_Logic
         $apires = $retweetObj->setRetweetId($id)->Request();
         //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
         $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
-        $res = $this->DBobj->exec($sql, array($this->Account_ID, $id));
+        $res = $this->DBobj->query($sql, array((int)$this->Account_ID, $id));
 
         //エラーチェック
         $apiErrorObj = new Api_Error($apires);
@@ -250,12 +249,13 @@ class Cron_Tweets_Popularity_Logic
     //既にリツイート済みでないかチェック
     //OK=>true 重複=>false
     private function checkRetweeted($id){
-
-        foreach($this->RetweetedList as $Retweeted){
-            if($Retweeted->tweet_id == $id){
-                return false;
-            }
-        }
+		if($this->RetweetedList and count($this->RetweetedList)){
+	        foreach($this->RetweetedList as $Retweeted){
+	            if($Retweeted->tweet_id == $id){
+	                return false;
+	            }
+	        }
+	    }
 
         return true;
     }

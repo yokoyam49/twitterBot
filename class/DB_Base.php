@@ -37,7 +37,7 @@ class DB_Base
 
 	protected $table_model_name = null;
 
-	private function __construct()
+	function __construct()
 	{
 		if(is_null(self::$pdo)){
 			self::db_connect();
@@ -138,7 +138,7 @@ class DB_Base
 		if(is_null($id)){
 			return $this->fetchAll($table_name);
 		}
-		if(!is_int($id)){
+		if(!is_numeric($id)){
 			return false;
 		}
 

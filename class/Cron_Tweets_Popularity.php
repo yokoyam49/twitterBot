@@ -16,12 +16,12 @@ class Cron_Tweets_Popularity
         $AccountObj = new MS_Account();
         $this->Accounts = $AccountObj->getRetweetValidAccount();
 
-        $this->LogicObj = new Cron_Follower_Expand_Logic();
+        $this->LogicObj = new Cron_Tweets_Popularity_Logic();
 
         $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
-    private function Exec()
+    public function Exec()
     {
         foreach($this->Accounts as $Account){
             $mes = date("Y-m-d H:i:s")." CRON: ".$Account->account_name." ツイート処理開始\n";

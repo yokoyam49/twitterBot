@@ -18,3 +18,4 @@ define('_TWITTER_LOG_PATH', _SYSTEM_ROOT.'log/');
 // OAuthƒ‰ƒCƒuƒ‰ƒŠ‚Ì“Ç‚İ‚İ
 require_once _TWITTER_OAUTH_PATH.'autoload.php';
 require_once _TWITTER_API_PATH.'api_setting.php';
+require_once _SYSTEM_ROOT.'db_conf.php';
