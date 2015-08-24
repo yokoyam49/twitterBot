@@ -11,4 +11,5 @@ consumer_key	VARCHAR(255)	トークン情報
 consumer_secret	VARCHAR(255)	トークン情報
 access_token	VARCHAR(255)	トークン情報
 access_token_secret	VARCHAR(255)	トークン情報
+use_flg		TINYINT(1)	使用フラグ
 notice		TEXT	備考

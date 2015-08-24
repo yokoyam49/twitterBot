@@ -131,18 +131,18 @@ class DB_Base
 	}
 
 	//-------------------------------------------------
-	//find() 全件検索
-	//find($id) where id=$id
+	//find([テーブル名]) 全件検索
+	//find([テーブル名], $id) where id=$id
 	//-------------------------------------------------
-	public function find($id = null, $orderby = null, $da = 'desc'){
+	public function find($table_name, $id = null, $orderby = null, $da = 'desc'){
 		if(is_null($id)){
-			return $this->fetchAll();
+			return $this->fetchAll($table_name);
 		}
 		if(!is_int($id)){
 			return false;
 		}
 
-		$sql = 'SELECT * FROM '.$this->table_name.' WHERE id = '.$id;
+		$sql = 'SELECT * FROM '.$table_name.' WHERE id = '.$id;
 		if(!is_null($orderby)){
 			$sql.= ' ORDER BY '.$orderby.' '.$da;
 		}
@@ -191,17 +191,19 @@ class DB_Base
 		return $res;
 	}
 	*/
-	public function insert($data){
-		if(isset($data->id)){
-			return $this->update($data);
+
+	//$data insert配列  $data = array('column_name' => value)
+	public function insert($table_name, $data){
+		if(isset($data['id'])){
+			return $this->update($table_name, $data);
 		}
 
 		$sql = '';
 		$calumn = array();
 		$values = array();
 		$binder = array();
-		$schema = call_user_func(array($this->table_model_name, 'getSchema'));
-
+		/*
+		//$schema = call_user_func(array($this->table_model_name, 'getSchema'));
 		foreach($schema as $culumn_name => $var_type){
 			if(isset($data->$culumn_name) and $culumn_name !== 'id'){
 				$calumn[] = $culumn_name;
@@ -209,7 +211,14 @@ class DB_Base
 				$binder[] = '?';
 			}
 		}
-		$sql = 'INSERT INTO '.$this->table_name.' ( '.implode(', ', $calumn).' )';
+		*/
+		foreach($data as $culumn_name => $value){
+			$calumn[] = $culumn_name;
+			$values[] = $value;
+			$binder[] = '?';
+		}
+
+		$sql = 'INSERT INTO '.$table_name.' ( '.implode(', ', $calumn).' )';
 		$sql .= ' VALUES ( '.implode(', ', $binder).' )';
 
 		$res = self::$pdo->prepare($sql);
@@ -261,15 +270,19 @@ class DB_Base
 		return $res;
 	}
 	*/
-	public function update($data){
-		if(!isset($data->id)){
+
+	//$data update配列  $data = array('column_name' => value)
+	public function update($table_name, $data){
+		if(!isset($data['id'])){
 			return $this->insert($data);
 		}
 
 		$sql = '';
 		$sets = array();
+		$values = array();
+		/*
 		//$schema = $this->table_model->_schema;
-		$schema = call_user_func(array($this->table_model_name, 'getSchema'));
+		//$schema = call_user_func(array($this->table_model_name, 'getSchema'));
 		foreach($schema as $culumn_name => $var_type){
 			if(isset($data->$culumn_name) and $culumn_name !== 'id'){
 				$sets[] = $culumn_name.' = ?';
@@ -279,7 +292,14 @@ class DB_Base
 				$values[] = date("Y-m-d H:i:s");
 			}
 		}
-		$sql = 'UPDATE '.$this->table_name.' SET '.implode(', ', $sets).' WHERE id = '.$data->id;
+		*/
+		foreach($data as $culumn_name => $value){
+			if($culumn_name !== 'id'){
+				$sets[] = $culumn_name.' = ?';
+				$values[] = $value;
+			}
+		}
+		$sql = 'UPDATE '.$table_name.' SET '.implode(', ', $sets).' WHERE id = '.$data['id'];
 
 		$res = self::$pdo->prepare($sql);
 		$i = 1;
@@ -298,9 +318,9 @@ class DB_Base
 	}
 
 	//全件取得
-	public function fetchAll($orderby = null, $da = 'desc') {
+	public function fetchAll($table_name, $orderby = null, $da = 'desc') {
 
-		$sql = 'SELECT * FROM '.$this->table_name;
+		$sql = 'SELECT * FROM '.$table_name;
 		if(!is_null($orderby)){
 			$sql.= ' ORDER BY '.$orderby.' '.$da;
 		}
