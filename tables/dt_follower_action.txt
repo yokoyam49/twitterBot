@@ -1,0 +1,15 @@
+フォロー動作管理テーブル
+dt_follower_action
+
+フォロー時の動作についての設定テーブル
+※一日にfollownum_indayの値だけフォローしていき、
+フォロー数とフォロワー数の差がdifference_followを超えた分だけリムーブしていく
+follownum_indayとdifference_followの差が小さければ、様子を見る期間が短くなっていくはず
+
+
+○フィールド
+id		INT,key,auto_increment
+account_id 	INT		アカウント管理テーブルID
+follownum_inday	INT		一日にフォローする数
+difference_follow	INT	フォロー数とフォロワー数の差の最大値設定
+

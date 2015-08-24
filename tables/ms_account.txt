@@ -1,0 +1,14 @@
+・Twitterアカウント管理テーブル
+ms_account
+
+
+○フィールド
+id		INT,key,auto_increment
+account_name	VARCHAR(255)	アカウント名
+user_id		VARCHAR(255)	自分のユーザーID
+screen_name	VARCHAR(255)	自分のスクリーン名
+consumer_key	VARCHAR(255)	トークン情報
+consumer_secret	VARCHAR(255)	トークン情報
+access_token	VARCHAR(255)	トークン情報
+access_token_secret	VARCHAR(255)	トークン情報
+notice		TEXT	備考

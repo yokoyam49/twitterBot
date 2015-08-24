@@ -1,7 +1,9 @@
 <?php
+date_default_timezone_set('Asia/Tokyo');
 
 //システムルート
-define('_SYSTEM_ROOT', '/var/www/html/');
+//define('_SYSTEM_ROOT', '/var/www/html/');
+define('_SYSTEM_ROOT', '/home/ainyan/ainyan.minibird.jp/');
 //twitteroauth
 define('_TWITTER_OAUTH_PATH', _SYSTEM_ROOT.'twitteroauth/');
 //twitterapi

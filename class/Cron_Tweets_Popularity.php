@@ -14,20 +14,24 @@ class Cron_Tweets_Popularity
     private $SearchStr;
     //指定時間より過去のを取得（現在からの秒数指定）※時間指定できないっぽいので中止
     //private $Until_Time;
-    //一回に取得する件数
-    private $Count;
+    //全取得件数
+    private $MaxCount;
+    //trueのときリツイートを実行しない
+    private $viewMode = false;
 
     // 固定設定======
     private $Result_Type = 'mixed';
-    //全取得件数
-    private $MaxCount = 1000;
+    //一回に取得する件数
+    private $Count = 100;
     //cron何秒毎実行かをセット 重複を取得しないために設定
     private $Bitween_Time = 3600;
     //既にリツイート済みでないか確認する時、ホームタイムライン幾つまでさかのぼってチェックするか
-    private $checkHomeTimeline_Num = 50;
+    private $checkHomeTimeline_Num = 200;
 
     //検索結果
     private $Search_Res;
+    //リツイートするID
+    private $TweetId;
     //タイムライン重複チェック用
     private $TimeLine_List = null;
 
@@ -35,6 +39,7 @@ class Cron_Tweets_Popularity
     private $twObj;
 
     // 認証情報 ==========
+    private $SCREEN_NAME = null;
     private $CONSUMER_KEY = null;
     private $CONSUMER_SECRET = null;
     private $ACCESS_TOKEN = null;
@@ -42,23 +47,37 @@ class Cron_Tweets_Popularity
 
     private $logFile;
 
-    public function __construct($CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
+    public function __construct($SCREEN_NAME = null, $CONSUMER_KEY = null, $CONSUMER_SECRET = null, $ACCESS_TOKEN = null, $ACCESS_TOKEN_SECRET = null)
     {
+    	if(!is_null($SCREEN_NAME)){
+    		$this->SCREEN_NAME = $SCREEN_NAME;
+    	}else{
+    		$this->SCREEN_NAME = SCREEN_NAME;
+    	}
         if(!is_null($CONSUMER_KEY) and !is_null($CONSUMER_SECRET) and !is_null($ACCESS_TOKEN) and !is_null($ACCESS_TOKEN_SECRET)){
             $this->twObj = new TwitterOAuth($CONSUMER_KEY, $CONSUMER_SECRET, $ACCESS_TOKEN, $ACCESS_TOKEN_SECRET);
         }else{
             $this->twObj = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
         }
 
-        $this->logFile = 'log_CronTweetsPopularity_'.date("Y_m_d").".log";
+        $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
-    public function setInit($SearchStr, $Until_Time, $Count)
+    public function setInit($SearchStr, $MaxCount)
     {
         $this->SearchStr = $SearchStr;
-        //$this->Until_Time = $Until_Time;
-        $this->Count = $Count;
+        $this->MaxCount = $MaxCount;
         return $this;
+    }
+    public function setViewMode(){
+    	$this->viewMode = true;
+    	return $this;
+    }
+    public function getSearch_Res(){
+    	return $this->Search_Res;
+    }
+    public function getTweetId(){
+    	return $this->TweetId;
     }
 
     //認証セット
@@ -77,17 +96,25 @@ class Cron_Tweets_Popularity
             //検索 人気順並び替え
             $this->SearchTweets();
             //重複チェック
+            $overlapID_Arr = array();
             foreach($this->Search_Res as $tweet){
                 if($this->checkRetweeted($tweet->id)){
                     $tweetId = $tweet->id;
+                    break;
                 }
+                $overlapID_Arr[] = $tweet->id;
             }
             if(is_null($tweetId)){
-                $mes = "全て重複";
+            	$overlapIDs = implode(",", $overlapID_Arr);
+                $mes = "TwieetID:".$overlapIDs." 全て重複"."\n";
                 throw new Exception($mes);
             }
             //リツイート
-            $this->Retweets($tweetId);
+            //viewModeのときはツイートしない
+            if(!$this->viewMode){
+            	$this->Retweets($tweetId);
+            }
+            $this->TweetId = $tweetId;
 
         }catch(Exception $e){
             //ログ出力
@@ -111,13 +138,21 @@ class Cron_Tweets_Popularity
                 $option['max_id'] = $max_id;
             }
             $SearchTweets_obj = new search_tweets($this->twObj);
-            $res = $SearchTweets_obj->setSearchArr($this->SearchStr)->setOption($option)->Request();
+            $res = $SearchTweets_obj->setSearchStr($this->SearchStr)->setOption($option)->Request();
             //エラーチェック
             $apiErrorObj = new Api_Error($res);
             if($apiErrorObj->error){
                 throw new Exception($apiErrorObj->errorMes_Str);
             }
             unset($apiErrorObj);
+            //検索結果ログ出力
+            if(!$res_count = count($res->statuses)){
+            	$mes = "searchレスポンス 0件";
+            	throw new Exception($mes);
+            }else{
+            	$mes = "searchレスポンス ".(string)$res_count."件"."\n";
+            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+            }
 
             //確実に結合するためforeachで
             foreach($res->statuses as $tweet){
@@ -135,8 +170,9 @@ class Cron_Tweets_Popularity
 
             $max_id = $this->getMaxId($res);
             if(!$max_id){
-                $mes = "MaxId取得失敗";
-                throw new Exception($mes);
+            	break;
+                //$mes = "MaxId取得失敗";
+                //throw new Exception($mes);
             }
         }
 
@@ -151,6 +187,9 @@ class Cron_Tweets_Popularity
     //MaxID取得
     private function getMaxId($recs)
     {
+    	if(!isset($recs->search_metadata->next_results)){
+    		return false;
+    	}
         $next_results = $recs->search_metadata->next_results;
         $next_results = htmlspecialchars_decode($next_results);
         $next_results = str_replace("?", "", $next_results);
@@ -199,6 +238,9 @@ class Cron_Tweets_Popularity
             if(!isset($line->retweeted_status)){
                 continue;
             }
+            if($line->user->screen_name != $this->SCREEN_NAME){
+            	continue;
+            }
             if($line->retweeted_status->id == $id){
                 return false;
             }
@@ -216,11 +258,17 @@ class Cron_Tweets_Popularity
     }
 
     private function multisortRetweetCount($tweetsData){
-        $cmplist = array();
+        $cmplist1 = array();
+        $cmplist2 = array();
         foreach($tweetsData as $tweet){
-            $cmplist[] = $tweet->retweet_count;
+            $cmplist1[] = $tweet->retweet_count;
+            $cmplist2[] = $tweet->favorite_count;
         }
-        array_multisort($cmplist, SORT_DESC, $tweetsData);
+        array_multisort(
+        				$cmplist1, SORT_DESC,
+        				$cmplist2, SORT_DESC,
+        				$tweetsData
+        				);
         return $tweetsData;
     }
 
