@@ -24,6 +24,20 @@ class MS_Account
         return $this->DBobj->query($sql);
     }
 
+    //リツイート動作が有効なものだけ取得
+    public function getRetweetValidAccount()
+    {
+        $sql = "SELECT * FROM ms_account WHERE use_flg = 1 AND retweet_on_flg = 1";
+        return $this->DBobj->query($sql);
+    }
+
+    //フォロー動作が有効なものだけ取得
+    public function getFollowValidAccount()
+    {
+        $sql = "SELECT * FROM ms_account WHERE use_flg = 1 AND follow_on_flg = 1";
+        return $this->DBobj->query($sql);
+    }
+
     //指定IDアカウント取得
     public function getAccountById($id)
     {

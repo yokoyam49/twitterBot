@@ -6,14 +6,16 @@ require_once(_TWITTER_CLASS_PATH."DB_Base.php");
 class Cron_Follower_Expand
 {
 
+    //アカウント情報
     private $Accounts;
 
     private $LogicObj;
 
     public function __construct()
     {
+        //フォロー動作有効になっているアカウント取得
         $AccountObj = new MS_Account();
-        $this->Accounts = $AccountObj->getValidAccount();
+        $this->Accounts = $AccountObj->getFollowValidAccount();
 
         $this->LogicObj = new Cron_Follower_Expand_Logic();
 
@@ -26,7 +28,7 @@ class Cron_Follower_Expand
             //ロジックにアカウントセット
             $this->LogicObj->setAccountId($Account->id);
 
-            
+
 
 
         }
