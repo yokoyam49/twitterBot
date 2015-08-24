@@ -53,9 +53,6 @@ class Cron_Tweets_Popularity
         }
     }
 
-
-
-
 }
 
 
