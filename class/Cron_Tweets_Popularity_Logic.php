@@ -232,17 +232,17 @@ class Cron_Tweets_Popularity_Logic
 
     public function Retweets($id){
         $retweetObj = new statuses_retweet($this->twObj);
-        $res = $retweetObj->setRetweetId($id)->Request();
+        $apires = $retweetObj->setRetweetId($id)->Request();
+        //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
+        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
+        $res = $this->DBobj->exec($sql, array($this->Account_ID, $id));
+
         //エラーチェック
-        $apiErrorObj = new Api_Error($res);
+        $apiErrorObj = new Api_Error($apires);
         if($apiErrorObj->error){
             throw new Exception($apiErrorObj->errorMes_Str);
         }
         unset($apiErrorObj);
-
-        //リツイートリストに追加
-        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
-        $res = $this->DBobj->exec($sql, array($this->Account_ID, $id));
 
         return $this;
     }
