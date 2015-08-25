@@ -234,7 +234,7 @@ class Cron_Tweets_Popularity_Logic
         $apires = $retweetObj->setRetweetId($id)->Request();
         //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
         $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
-        $res = $this->DBobj->query($sql, array((int)$this->Account_ID, $id));
+        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $id));
 
         //エラーチェック
         $apiErrorObj = new Api_Error($apires);

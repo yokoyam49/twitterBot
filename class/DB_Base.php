@@ -124,6 +124,38 @@ class DB_Base
 		return $result;
 	}
 
+	//insert,update,delete文
+	public function execute($sql, $data = null){
+
+		if(is_null($data)){
+			return self::$pdo->exec($sql);
+
+		}elseif(!is_null($sql) and is_array($data)){
+			$res = self::$pdo->prepare($sql);
+			$i = 1;
+			foreach($data as $value){
+				if(gettype($value) === 'string'){
+					$res->bindValue($i, $value, PDO::PARAM_STR);
+				}else{
+					$res->bindValue($i, $value, PDO::PARAM_INT);
+				}
+				$i++;
+			}
+			$res->execute();
+
+		}else{
+			return False;
+		}
+
+		$result = $res->rowCount();
+
+		if(empty($result)){
+			return False;
+		}
+
+		return $result;
+	}
+
 	public function exec($sql){
 
 		//処理件数を返す
