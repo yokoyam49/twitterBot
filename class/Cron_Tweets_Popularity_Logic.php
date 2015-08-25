@@ -34,7 +34,7 @@ class Cron_Tweets_Popularity_Logic
     //検索オプション
     private $SerchAction;
     //リツイート済みリスト
-    private $RetweetedList;
+    //private $RetweetedList;
 
     //OAuthオブジェクト
     private $twObj;
@@ -82,9 +82,6 @@ class Cron_Tweets_Popularity_Logic
         $sql = "SELECT search_str_1, result_type FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
-        //リツイートリスト取得
-        $sql = "SELECT tweet_id, create_date FROM dt_retweet_list WHERE account_id = ?";
-        $this->RetweetedList = $this->DBobj->query($sql, array($this->Account_ID));
     }
 
     public function setViewMode($id){
@@ -98,40 +95,7 @@ class Cron_Tweets_Popularity_Logic
     public function getTweetId(){
     	return $this->TweetId;
     }
-/*
-    public function Exec()
-    {
-        try{
-            $tweetId = null;
-            //検索 人気順並び替え
-            $this->SearchTweets();
-            //重複チェック
-            $overlapID_Arr = array();
-            foreach($this->Search_Res as $tweet){
-                if($this->checkRetweeted($tweet->id)){
-                    $tweetId = $tweet->id;
-                    break;
-                }
-                $overlapID_Arr[] = $tweet->id;
-            }
-            if(is_null($tweetId)){
-            	$overlapIDs = implode(",", $overlapID_Arr);
-                $mes = "TwieetID:".$overlapIDs." 全て重複"."\n";
-                throw new Exception($mes);
-            }
-            //リツイート
-            //viewModeのときはツイートしない
-            if(!$this->viewMode){
-            	$this->Retweets($tweetId);
-            }
-            $this->TweetId = $tweetId;
 
-        }catch(Exception $e){
-            //ログ出力
-            error_log($e->getMessage(), 3, _TWITTER_LOG_PATH.$this->logFile);
-        }
-    }
-*/
     //重複していないID取得 全て重複時、nullリターン
     public function getAnDuplicateTweetID(){
         $tweetId = null;
@@ -249,15 +213,13 @@ class Cron_Tweets_Popularity_Logic
     //既にリツイート済みでないかチェック
     //OK=>true 重複=>false
     private function checkRetweeted($id){
-		if($this->RetweetedList and count($this->RetweetedList)){
-	        foreach($this->RetweetedList as $Retweeted){
-	            if($Retweeted->tweet_id == $id){
-	                return false;
-	            }
-	        }
-	    }
-
-        return true;
+        $sql = "SELECT tweet_id FROM dt_retweet_list WHERE account_id = ? AND tweet_id = ?";
+        $res = $this->DBobj->query($sql, array($this->Account_ID, $id));
+        if(!isset($res[0])){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     private function usortRetweetCountCmp($a, $b){
