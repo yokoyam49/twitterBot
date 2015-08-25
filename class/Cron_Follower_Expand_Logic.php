@@ -141,6 +141,10 @@ class Cron_Follower_Expand_Logic
     //フォローを返さないuserを抽出し、規定数リムーブ
     public function FollowingRemove()
     {
+        //不具合が出ないよう設定調整
+        if($this->Follow_Num_Inday > $this->Difference_Follow){
+            $this->Follow_Num_Inday = $this->Difference_Follow;
+        }
         //リムーブしなくてはならない数
         $must_remove_num = 0;
         //対象抽出
