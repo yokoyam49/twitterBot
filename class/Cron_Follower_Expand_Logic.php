@@ -80,7 +80,6 @@ class Cron_Follower_Expand_Logic
     {
         $follower_count = 0;
         $cursor = null;
-        $this->Follower_List = array();
         for($i = 0; $i < 20; $i++){
             $option = array(
                                 'screen_name' => $this->AccountInfo->screen_name,
@@ -91,19 +90,19 @@ class Cron_Follower_Expand_Logic
                 $option['cursor'] = $cursor;
             }
             $FollowersIds_obj = new followers_ids($this->twObj);
-            $res = $FollowersIds_obj->setOption($option)->Request();
+            $api_res = $FollowersIds_obj->setOption($option)->Request();
             //エラーチェック
-            $apiErrorObj = new Api_Error($res);
+            $apiErrorObj = new Api_Error($api_res);
             if($apiErrorObj->error){
                 throw new Exception($apiErrorObj->errorMes_Str);
             }
             unset($apiErrorObj);
             //APIのレスポンスより、DBにフォロー状況反映
-            $this->DBsetFollowersData($res->ids);
-            $follower_count += count($res->ids);
+            $this->DBsetFollowersData($api_res->ids);
+            $follower_count += count($api_res->ids);
 
-            if(isset($res->next_cursor) and $res->next_cursor > 0){
-                $cursor = $res->next_cursor;
+            if(isset($api_res->next_cursor) and $api_res->next_cursor > 0){
+                $cursor = $api_res->next_cursor;
             }else{
                 break;
             }
@@ -114,15 +113,21 @@ class Cron_Follower_Expand_Logic
 
     //フォロー状況をDBに反映
     private function DBsetFollowersData($follower_list){
-        //フォローされている
-        $follows = "(".implode(",", $follower_list).")";
-        $sql = "UPDATE dt_follower_cont SET followed = 1, followed_date = now() WHERE account_id = ? AND followed = 0 AND user_id IN ".$follows;
-        $followed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+        $followed_num = 0;
+        $removed_num = 0;
+        $listMap = array();
+        if(is_array($follower_list) and count($follower_list)){
+            //マッピング配列
+            $listMap = array_flip($follower_list);
+            //フォローされている
+            $follows = "(".implode(",", $follower_list).")";
+            $sql = "UPDATE dt_follower_cont SET followed = 1, followed_date = now() WHERE account_id = ? AND followed = 0 AND user_id IN ".$follows;
+            $followed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+        }
         //リムーブチェック
         $removed_user = array();
         $sql = "SELECT user_id FROM dt_follower_cont WHERE account_id = ? AND followed = 1";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
-        $listMap = array_flip($follower_list);
         foreach($res as $user){
             if(!isset($listMap[$user->user_id])){
                 //リムーブされている
@@ -130,9 +135,11 @@ class Cron_Follower_Expand_Logic
             }
         }
         //リムーブ状況反映
-        $removed = "(".implode(",", $removed_user).")";
-        $sql = "UPDATE dt_follower_cont SET followed = 0 removed_date = now() WHERE account_id = ? AND user_id IN ".$removed;
-        $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+        if(count($removed_user)){
+            $removed = "(".implode(",", $removed_user).")";
+            $sql = "UPDATE dt_follower_cont SET followed = 0, removed_date = now() WHERE account_id = ? AND user_id IN ".$removed;
+            $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+        }
 
         $mes = date("Y-m-d H:i:s")." フォロー状況を反映しました 新規followed件数 ".$followed_num."件 removed件数 ".$removed_num."件\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
@@ -150,7 +157,7 @@ class Cron_Follower_Expand_Logic
         //対象抽出
         $sql = "SELECT user_id, following_date FROM dt_follower_cont WHERE account_id = ? AND following = 1 AND followed = 0 ORDER BY following_date ASC";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
-        if(!count($res)){
+        if(!$res or !count($res)){
             //リムーブする必要なし
             return;
         }
@@ -166,9 +173,9 @@ class Cron_Follower_Expand_Logic
                                 'user_id' => $res[$i]->user_id,
                             );
             $FriendshipsDestroy = new friendships_destroy($this->twObj);
-            $res = $FriendshipsDestroy->setOption($option)->Request();
+            $api_res = $FriendshipsDestroy->setOption($option)->Request();
             //エラーチェック
-            $apiErrorObj = new Api_Error($res);
+            $apiErrorObj = new Api_Error($api_res);
             if($apiErrorObj->error){
                 throw new Exception($apiErrorObj->errorMes_Str);
             }
@@ -189,9 +196,9 @@ class Cron_Follower_Expand_Logic
                                     'follow' => false
                                 );
                 $FriendshipsCreate = new friendships_create($this->twObj);
-                $res = $FriendshipsCreate->setOption($option)->Request();
+                $api_res = $FriendshipsCreate->setOption($option)->Request();
                 //エラーチェック
-                $apiErrorObj = new Api_Error($res);
+                $apiErrorObj = new Api_Error($api_res);
                 if($apiErrorObj->error){
                     throw new Exception($apiErrorObj->errorMes_Str);
                 }
@@ -238,7 +245,7 @@ class Cron_Follower_Expand_Logic
                 }
 
                 if(isset($api_res->next_cursor) and $api_res->next_cursor > 0){
-                $cursor = $api_res->next_cursor;
+                    $cursor = $api_res->next_cursor;
                 }else{
                     break;
                 }
@@ -248,6 +255,7 @@ class Cron_Follower_Expand_Logic
         $mes = "フォローターゲットが枯渇しました。新たなターゲットを設定してください。";
         $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
         $res = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         return $TagetUsers;
     }
 
