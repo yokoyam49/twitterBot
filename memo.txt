@@ -12,4 +12,4 @@
 
 cron
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/popularity.php
-
+/usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/follow/following.php

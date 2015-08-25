@@ -72,6 +72,11 @@ class followers_ids
         return $this->Response;
     }
 
+	public function resetLastResponse()
+	{
+		$this->twObj->resetLastResponse();
+	}
+
 }
 
 

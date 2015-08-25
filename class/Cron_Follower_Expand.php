@@ -22,7 +22,7 @@ class Cron_Follower_Expand
         $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
-    private function Exec()
+    public function Exec()
     {
         foreach($this->Accounts as $Account){
 
