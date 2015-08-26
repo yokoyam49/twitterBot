@@ -79,7 +79,7 @@ class Cron_Tweets_Popularity_Logic
     private function DBgetInitInfo()
     {
         //検索オプション取得
-        $sql = "SELECT search_str_1, result_type FROM dt_search_action WHERE account_id = ?";
+        $sql = "SELECT search_str_1, result_type, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
     }
@@ -98,17 +98,12 @@ class Cron_Tweets_Popularity_Logic
 
     //重複していないID取得 全て重複時、nullリターン
     public function getAnDuplicateTweetID(){
-        $tweetId = null;
-        $overlapID_Arr = array();
         foreach($this->Search_Res as $tweet){
             if($this->checkRetweeted((string)$tweet->id)){
-                $tweetId = (string)$tweet->id;
-                break;
+                return $tweet;
             }
-            //$overlapID_Arr[] = $tweet->id;
         }
-
-        return $tweetId;
+        return null;
     }
 
     public function SearchTweets()
@@ -193,12 +188,17 @@ class Cron_Tweets_Popularity_Logic
         return false;
     }
 
-    public function Retweets($id){
+    public function Retweets($tweet){
+        if(!$this->checkRetweetNum($tweet)){
+            $mes = $tweet->id.": retweet_count: ".$tweet->retweet_count." 最低リツイート数設定に達しなかったため、リツイート未実行"."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+            return $this;
+        }
         $retweetObj = new statuses_retweet($this->twObj);
-        $apires = $retweetObj->setRetweetId($id)->Request();
+        $apires = $retweetObj->setRetweetId($tweet->id)->Request();
         //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
         $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
-        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $id));
+        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id));
 
         //エラーチェック
         $apiErrorObj = new Api_Error($apires);
@@ -208,6 +208,16 @@ class Cron_Tweets_Popularity_Logic
         unset($apiErrorObj);
 
         return $this;
+    }
+
+    //最小リツイート数をクリアしているかチェック クリア:true アウト:false
+    private function checkRetweetNum($tweet)
+    {
+        if($tweet->retweet_count < $this->SerchAction->minimum_retweet_num){
+            return false;
+        }else{
+            return true;
+        }
     }
 
     //既にリツイート済みでないかチェック

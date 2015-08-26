@@ -33,15 +33,14 @@ class Cron_Tweets_Popularity
             try{
                 //検索 人気順並び替え
                 $this->LogicObj->SearchTweets();
-                //重複していないID取得
-                $tweetId = $this->LogicObj->getAnDuplicateTweetID();
-                if(is_null($tweetId)){
-                    $overlapIDs = implode(",", $overlapID_Arr);
-                    $mes = "TwieetID:".$overlapIDs." 全て重複"."\n";
+                //重複していないもの取得
+                $tweet = $this->LogicObj->getAnDuplicateTweetID();
+                if(is_null($tweet)){
+                    $mes = "TwieetID: 全て重複"."\n";
                     throw new Exception($mes);
                 }
                 //リツイート
-                $this->LogicObj->Retweets($tweetId);
+                $this->LogicObj->Retweets($tweet);
 
             }catch(Exception $e){
                 //ログ出力
