@@ -1,6 +1,6 @@
 #!/usr/bin/php5.4
 <?php
-set_time_limit(300);
+set_time_limit(0);
 
 require_once("../../conf.php");
 require_once(_TWITTER_CLASS_PATH."Cron_Tweets_Popularity.php");

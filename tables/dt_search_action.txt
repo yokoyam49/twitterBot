@@ -9,4 +9,6 @@ search_str_1	VARCHAR(255)	人気ツイート検索時文字列
 search_str_2	VARCHAR(255)
 search_str_3	VARCHAR(255)
 result_type	VARCHAR(20)	検索タイプ popular,recent,mixed
+search_count_popular	INT	result_type:popularでの検索設定数
+search_count_recent	INT	result_type:recentでの検索設定数
 minimum_retweet_num	INT	最低リツイート数　これ以下はリツイートしない

@@ -29,21 +29,28 @@ try{
     //検索 人気順並び替え
     $Popularity_logic->SearchTweets();
     //重複していないID取得
-    $tweetId = $Popularity_logic->getAnDuplicateTweetID();
-    if(is_null($tweetId)){
-        $overlapIDs = implode(",", $overlapID_Arr);
-        $mes = "TwieetID:".$overlapIDs." 全て重複"."\n";
+    $tweet = $Popularity_logic->getAnDuplicateTweetID();
+    if(is_null($tweet)){
+        $mes = "TwieetID: 全て重複"."\n";
         throw new Exception($mes);
     }
     //テストなのでリツイートしない
-    //$Popularity_logic->Retweets($tweetId);
+    //$Popularity_logic->Retweets($tweet);
 
 }catch(Exception $e){
     //ログ出力
     error_log($e->getMessage(), 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
 }
+?>
+<html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ツイートテスト</title>
+</head>
+<body>
 
-echo '判定ID：'.$tweetId."<br><br>\n";
+<?php
+echo '判定ID：'.$tweet->id."<br><br>\n";
 foreach ($Popularity_logic->getSearch_Res() as $result){
     $id = $result->id;
     $retweet_count = $result->retweet_count;
@@ -60,4 +67,6 @@ foreach ($Popularity_logic->getSearch_Res() as $result){
 
 $mes = date("Y-m-d H:i:s")." test: ".$Account->account_name." 処理終了\n";
 error_log($mes, 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
-
+?>
+</body>
+</html>

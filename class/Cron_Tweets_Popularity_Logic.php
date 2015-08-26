@@ -16,15 +16,13 @@ class Cron_Tweets_Popularity_Logic
 
     // 入力設定======
     //全取得件数
-    private $MaxCount = 1000;
+    private $MaxCount = 400;
     //trueのときリツイートを実行しない
     private $viewMode = false;
 
     // 固定設定======
     //一回に取得する件数
     private $Count = 100;
-    //cron何秒毎実行かをセット 重複を取得しないために設定
-    private $Bitween_Time = 3600;
 
     //検索結果
     private $Search_Res;
@@ -33,6 +31,11 @@ class Cron_Tweets_Popularity_Logic
 
     //検索オプション
     private $SerchAction;
+    //検索タイプごとの検索数
+    private $ResultType_Search_Count = array(
+    					'popular' => null,
+    					'recent' => null
+    					);
     //リツイート済みリスト
     //private $RetweetedList;
 
@@ -79,9 +82,11 @@ class Cron_Tweets_Popularity_Logic
     private function DBgetInitInfo()
     {
         //検索オプション取得
-        $sql = "SELECT search_str_1, result_type, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
+        $sql = "SELECT search_str_1, result_type, search_count_popular, search_count_recent, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
+        $this->ResultType_Search_Count['popular'] = $res[0]->search_count_popular;
+        $this->ResultType_Search_Count['recent'] = $res[0]->search_count_recent;
     }
 
     public function setViewMode($id){
@@ -110,55 +115,57 @@ class Cron_Tweets_Popularity_Logic
     {
         $tweetsData = array();
         $max_id = null;
-        for($i = 0; $i < $this->MaxCount; $i += $this->Count){
+        foreach($this->ResultType_Search_Count as $result_type => $result_type_count){
+	        for($i = 0; $i < $result_type_count; $i += $this->Count){
 
-            $option = array(
-                                'count' => $this->Count,
-                                'result_type' => $this->SerchAction->result_type,
-                                'lang' => 'ja',
-                                'locale' => 'ja'
-                            );
-            if(!is_null($max_id)){
-                $option['max_id'] = $max_id;
-            }
-            $SearchTweets_obj = new search_tweets($this->twObj);
-            $res = $SearchTweets_obj->setSearchStr($this->SerchAction->search_str_1)->setOption($option)->Request();
-            //エラーチェック
-            $apiErrorObj = new Api_Error($res);
-            if($apiErrorObj->error){
-                throw new Exception($apiErrorObj->errorMes_Str);
-            }
-            unset($apiErrorObj);
-            //検索結果ログ出力
-            if(!$res_count = count($res->statuses)){
-            	$mes = "searchレスポンス 0件";
-            	throw new Exception($mes);
-            }else{
-            	$mes = "searchレスポンス ".(string)$res_count."件"."\n";
-            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
-            }
+	            $option = array(
+	                                'count' => $this->Count,
+	                                'result_type' => $result_type,
+	                                'lang' => 'ja',
+	                                'locale' => 'ja'
+	                            );
+	            if(!is_null($max_id)){
+	                $option['max_id'] = $max_id;
+	            }
+	            $SearchTweets_obj = new search_tweets($this->twObj);
+	            $res = $SearchTweets_obj->setSearchStr($this->SerchAction->search_str_1)->setOption($option)->Request();
+	            //エラーチェック
+	            $apiErrorObj = new Api_Error($res);
+	            if($apiErrorObj->error){
+	                throw new Exception($apiErrorObj->errorMes_Str);
+	            }
+	            unset($apiErrorObj);
+	            //検索結果ログ出力
+	            if(!$res_count = count($res->statuses)){
+	            	$mes = "searchレスポンス result_type:".$result_type." 0件";
+	            	throw new Exception($mes);
+	            }else{
+	            	$mes = "searchレスポンス result_type:".$result_type." ".(string)$res_count."件"."\n";
+	            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+	            }
 
-            //確実に結合するためforeachで
-            foreach($res->statuses as $tweet){
-                //リツイートの場合、オリジナルを取得
-                if(isset($tweet->retweeted_status) and isset($tweet->retweeted_status->id) and strlen($tweet->retweeted_status->id)){
-                    $tweetsData[] = $tweet->retweeted_status;
-                }else{
-                    $tweetsData[] = $tweet;
-                }
-            }
+	            //確実に結合するためforeachで
+	            foreach($res->statuses as $tweet){
+	                //リツイートの場合、オリジナルを取得
+	                if(isset($tweet->retweeted_status) and isset($tweet->retweeted_status->id) and strlen($tweet->retweeted_status->id)){
+	                    $tweetsData[] = $tweet->retweeted_status;
+	                }else{
+	                    $tweetsData[] = $tweet;
+	                }
+	            }
 
-            if($res->search_metadata->count < $this->Count){
-                break;
-            }
+	            if($res->search_metadata->count < $this->Count){
+	                break;
+	            }
 
-            $max_id = $this->getMaxId($res);
-            if(!$max_id){
-            	break;
-                //$mes = "MaxId取得失敗";
-                //throw new Exception($mes);
-            }
-        }
+	            $max_id = $this->getMaxId($res);
+	            if(!$max_id){
+	            	break;
+	                //$mes = "MaxId取得失敗";
+	                //throw new Exception($mes);
+	            }
+	        }
+	    }
 
         //並び替え
         $tweetsData = $this->multisortRetweetCount($tweetsData);
@@ -197,8 +204,8 @@ class Cron_Tweets_Popularity_Logic
         $retweetObj = new statuses_retweet($this->twObj);
         $apires = $retweetObj->setRetweetId($tweet->id)->Request();
         //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
-        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, create_date ) VALUES ( ?, ?, now() )";
-        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id));
+        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, retweet_count, create_date ) VALUES ( ?, ?, ?, now() )";
+        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id, $tweet->retweet_count));
 
         //エラーチェック
         $apiErrorObj = new Api_Error($apires);
