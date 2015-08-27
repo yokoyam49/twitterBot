@@ -13,6 +13,9 @@ class Cron_Tweets_Popularity_Logic
     //処理を実行するアカウントID
     private $Account_ID;
     private $AccountInfo = null;
+    //強制リザルトタイプ これに設定されたリザルトタイプのみを実行
+    //実質、popular→動作に変化なし mixed→やる意味がない ので設定されるとしたらrecentのみ
+    private $ResultType = null;
 
     // 入力設定======
     //全取得件数
@@ -89,6 +92,12 @@ class Cron_Tweets_Popularity_Logic
         $this->ResultType_Search_Count['recent'] = $res[0]->search_count_recent;
     }
 
+    public function setResultType($ResultType)
+    {
+        $this->ResultType = $ResultType;
+        return $this;
+    }
+
     public function setViewMode($id){
         $this->setAccountId($id);
     	$this->viewMode = true;
@@ -116,6 +125,9 @@ class Cron_Tweets_Popularity_Logic
         $tweetsData = array();
         $max_id = null;
         foreach($this->ResultType_Search_Count as $result_type => $result_type_count){
+            if(!is_null($this->ResultType) and $this->ResultType == 'recent' and $this->ResultType != $result_type){
+                continue;
+            }
 	        for($i = 0; $i < $result_type_count; $i += $this->Count){
 
 	            $option = array(

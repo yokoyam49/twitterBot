@@ -12,6 +12,7 @@
 
 cron
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/popularity.php
+/usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/recently.php
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/follow/following.php
 
 SELECT count(user_id) FROM dt_follower_cont WHERE account_id = 1 AND following = 1 AND followed = 0

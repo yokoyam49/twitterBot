@@ -9,3 +9,4 @@ id		INT,key,auto_increment
 account_id 	INT		アカウント管理テーブルID
 tweet_id	VARCHAR(255)	自分がリツイートしたオリジナルツイートID
 create_date	TIMESTAMP
+retweet_count	INT		リツイートカウント

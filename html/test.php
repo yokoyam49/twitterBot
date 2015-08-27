@@ -22,6 +22,9 @@ $Account = $AccountObj->getAccountById($AccountID);
 $mes = date("Y-m-d H:i:s")." test: ".$Account->account_name." 処理開始\n";
 error_log($mes, 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
 
+//recentで実行
+//$Popularity_logic->setResultType('recent');
+
 //ロジックにアカウントセット
 $Popularity_logic->setAccountId($Account->id);
 

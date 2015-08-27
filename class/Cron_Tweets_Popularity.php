@@ -21,6 +21,12 @@ class Cron_Tweets_Popularity
         $this->logFile = 'log_'.date("Y_m_d").".log";
     }
 
+    public function setResultType($ResultType)
+    {
+        $this->LogicObj->setResultType($ResultType);
+        return $this;
+    }
+
     public function Exec()
     {
         foreach($this->Accounts as $Account){
