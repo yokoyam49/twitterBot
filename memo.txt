@@ -1,17 +1,8 @@
 
-・現状のフォロー状況を反映
-└自分のフォローリスト取得
-└DBと突合せ
-・規定数フォローできるようチェックしてリムーブかける
-└following○followed×なのを抽出
-└古いのから必要数リムーブ
-・（規定数）フォローしに行く
-└ターゲットIDからまだアタックしていないのを抽出
-└フォローしする
-
-
 cron
+1,3,5,7,9,11,13,15,17,19,21,23
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/popularity.php
+0,2,4,6,8,10,12,14,16,18,20,22
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/tweets/recently.php
 /usr/bin/php5.4 /home/ainyan/ainyan.minibird.jp/cron/follow/following.php
 
