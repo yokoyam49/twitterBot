@@ -211,7 +211,7 @@ class Cron_Tweets_Popularity_Logic
         $retweetObj = new statuses_retweet($this->twObj);
         $apires = $retweetObj->setRetweetId($tweet->id)->Request();
         //リツイートリストに追加 エラーチェックする前に追加（エラー時でも追加される）
-        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, search_str, tweet_text, retweet_count, create_date ) VALUES ( ?, ?, ?, ?, ? now() )";
+        $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, search_str, tweet_text, retweet_count, create_date ) VALUES ( ?, ?, ?, ?, ?, now() )";
         $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id, $this->SerchAction->search_str_1, $tweet->text, $tweet->retweet_count));
 
         //エラーチェック
@@ -278,8 +278,9 @@ class Cron_Tweets_Popularity_Logic
         $cmplist1 = array();
         $cmplist2 = array();
         foreach($tweetsData as $tweet){
-            $cmplist1[] = $tweet->retweet_count;
-            $cmplist2[] = $tweet->favorite_count;
+        	$cmplist1[] = $tweet->created_at;
+            $cmplist2[] = $tweet->retweet_count;
+            //$cmplist2[] = $tweet->favorite_count;
         }
         array_multisort(
         				$cmplist1, SORT_DESC,

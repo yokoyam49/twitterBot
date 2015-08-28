@@ -63,9 +63,21 @@ foreach ($Popularity_logic->getSearch_Res() as $result){
     $content = $result->text;
     $updated = $result->created_at;
     $time = $time = date("Y-m-d H:i:s",strtotime($updated));
+    $imgs = array();
+    if(isset($result->entities->media) and count($result->entities->media)){
+	    foreach($result->entities->media as $entity){
+	    	$imgs[] = $entity->media_url;
+	    }
+	}
 
-    echo "<img src='".$link."''>"." | ".$id." | ".$favorite_count." | ".$retweet_count." | ".$name." | ".$content." | ".$time;
+    echo "<img src='".$link."'>"." | ".$id." | ".$favorite_count." | ".$retweet_count." | ".$name." | ".$content." | ".$time;
     echo '<br>';
+    if(count($imgs)){
+    	foreach($imgs as $img){
+    		echo "<img src='".$img."'>";
+    		echo '<br>';
+    	}
+    }
 }
 
 $mes = date("Y-m-d H:i:s")." test: ".$Account->account_name." 処理終了\n";
