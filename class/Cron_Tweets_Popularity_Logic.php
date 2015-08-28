@@ -85,7 +85,7 @@ class Cron_Tweets_Popularity_Logic
     private function DBgetInitInfo()
     {
         //検索オプション取得
-        $sql = "SELECT search_str_1, result_type, search_count_popular, search_count_recent, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
+        $sql = "SELECT search_str_1, ng_words, result_type, search_count_popular, search_count_recent, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
         $this->ResultType_Search_Count['popular'] = $res[0]->search_count_popular;
@@ -113,7 +113,7 @@ class Cron_Tweets_Popularity_Logic
     //重複していないID取得 全て重複時、nullリターン
     public function getAnDuplicateTweetID(){
         foreach($this->Search_Res as $tweet){
-            if($this->checkRetweeted((string)$tweet->id)){
+            if($this->checkRetweeted((string)$tweet->id) and $this->checkNgWord($tweet)){
                 return $tweet;
             }
         }
@@ -148,13 +148,8 @@ class Cron_Tweets_Popularity_Logic
 	            }
 	            unset($apiErrorObj);
 	            //検索結果ログ出力
-	            if(!$res_count = count($res->statuses)){
-	            	$mes = "searchレスポンス result_type:".$result_type." 0件";
-	            	throw new Exception($mes);
-	            }else{
-	            	$mes = "searchレスポンス result_type:".$result_type." ".(string)$res_count."件"."\n";
+	            	$mes = "searchレスポンス result_type:".$result_type." ".(string)count($res->statuses)."件"."\n";
 	            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
-	            }
 
 	            //確実に結合するためforeachで
 	            foreach($res->statuses as $tweet){
@@ -249,6 +244,25 @@ class Cron_Tweets_Popularity_Logic
         }else{
             return false;
         }
+    }
+
+    //NGワードチェック OK時tureリターン
+    private function checkNgWord($tweet){
+        //NGワード設定なし
+        if(is_null($this->SerchAction->ng_words)){
+            return true;
+        }
+
+        $ng_words = explode(' ', $this->SerchAction->ng_words);
+        foreach($ng_words as $ng_word){
+            if(mb_stripos($tweet->text, $ng_word) !== false ){
+                return false;
+            }
+            if( isset($tweet->id_str) and $tweet->id_str === $ng_word ){
+                return false;
+            }
+        }
+        return true;
     }
 
     private function usortRetweetCountCmp($a, $b){
