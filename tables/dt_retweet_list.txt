@@ -8,5 +8,8 @@ dt_retweet_list
 id		INT,key,auto_increment
 account_id 	INT		アカウント管理テーブルID
 tweet_id	VARCHAR(255)	自分がリツイートしたオリジナルツイートID
+search_str	VARCHAR(255)	検索文言
+tweet_text	TEXT		ツイート本文
 create_date	TIMESTAMP
 retweet_count	INT		リツイートカウント
+
