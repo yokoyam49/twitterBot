@@ -278,7 +278,13 @@ class Cron_Tweets_Popularity_Logic
         $cmplist1 = array();
         $cmplist2 = array();
         foreach($tweetsData as $tweet){
-        	$cmplist1[] = $tweet->created_at;
+        	$tweet_updated = date("Y-m-d H:i:s", strtotime($tweet->created_at));
+        	if(preg_match('/^(20[0-9][0-9][\/\-][01][0-9][\/\-][0-3][0-9])\s([0-2][0-9]:[0-5][0-9]:[0-5][0-9])$/', $tweet_updated, $m)){
+        		$tweet_day = $m[1];
+        	}else{
+        		$tweet_day = $tweet_updated;
+        	}
+        	$cmplist1[] = $tweet_day;
             $cmplist2[] = $tweet->retweet_count;
             //$cmplist2[] = $tweet->favorite_count;
         }
