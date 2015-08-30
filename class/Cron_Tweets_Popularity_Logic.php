@@ -175,7 +175,7 @@ class Cron_Tweets_Popularity_Logic
 	    }
 
         //並び替え
-        $tweetsData = $this->multisortRetweetCount($tweetsData);
+        $tweetsData = $this->multisortRetweetCount2($tweetsData);
         //usort($tweetsData, array($this, 'usortRetweetCountCmp'));
         $this->Search_Res = $tweetsData;
 
@@ -258,6 +258,9 @@ class Cron_Tweets_Popularity_Logic
             if(mb_stripos($tweet->text, $ng_word) !== false ){
                 return false;
             }
+            if(mb_stripos($tweet->user->name, $ng_word) !== false ){
+                return false;
+            }
             if( isset($tweet->id_str) and $tweet->id_str === $ng_word ){
                 return false;
             }
@@ -274,6 +277,7 @@ class Cron_Tweets_Popularity_Logic
         return ($a_reco > $b_reco) ? -1 : 1;
     }
 
+	//日付ごと区切りのリツイート数順
     private function multisortRetweetCount($tweetsData){
         $cmplist1 = array();
         $cmplist2 = array();
@@ -296,6 +300,25 @@ class Cron_Tweets_Popularity_Logic
         return $tweetsData;
     }
 
+	//一時間あたりのリツイート数計算
+    private function multisortRetweetCount2($tweetsData){
+        $cmplist1 = array();
+        $cmplist2 = array();
+        foreach($tweetsData as $tweet){
+        	$ago_hour = round((time() - strtotime($tweet->created_at)) / 3600, 2);
+        	if($ago_hour === 0){
+        		$ago_hour = 0.01;
+        	}
+        	$cmplist1[] = round($tweet->retweet_count / $ago_hour, 2);
+            $cmplist2[] = date("Y-m-d H:i:s", strtotime($tweet->created_at));
+        }
+        array_multisort(
+        				$cmplist1, SORT_DESC,
+        				$cmplist2, SORT_DESC,
+        				$tweetsData
+        				);
+        return $tweetsData;
+    }
 
 
 }
