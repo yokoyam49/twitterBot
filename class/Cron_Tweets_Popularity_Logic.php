@@ -85,11 +85,19 @@ class Cron_Tweets_Popularity_Logic
     private function DBgetInitInfo()
     {
         //検索オプション取得
-        $sql = "SELECT search_str_1, ng_words, result_type, search_count_popular, search_count_recent, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
+        $sql = "SELECT search_str_1, ng_words, result_type, search_count_popular, search_count_recent, use_sort_method, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
         $this->ResultType_Search_Count['popular'] = $res[0]->search_count_popular;
         $this->ResultType_Search_Count['recent'] = $res[0]->search_count_recent;
+    }
+
+    //前回何分前に実行したか取得(クーロンインターバル用)
+    public function getLastExecTime($id)
+    {
+        $sql = "SELECT create_date FROM dt_retweet_list WHERE account_id = ? ORDER BY create_date DESC LIMIT 1";
+        $res = $this->DBobj->query($sql, array($id));
+        return round((time() - strtotime($res[0]->create_date)) / 60);
     }
 
     public function setResultType($ResultType)
@@ -175,7 +183,8 @@ class Cron_Tweets_Popularity_Logic
 	    }
 
         //並び替え
-        $tweetsData = $this->multisortRetweetCount2($tweetsData);
+        $tweetsData = $this->multisortMethod($tweetsData);
+        //$tweetsData = $this->multisortRetweetCount2($tweetsData);multisortMethod
         //usort($tweetsData, array($this, 'usortRetweetCountCmp'));
         $this->Search_Res = $tweetsData;
 
@@ -277,8 +286,20 @@ class Cron_Tweets_Popularity_Logic
         return ($a_reco > $b_reco) ? -1 : 1;
     }
 
-	//日付ごと区切りのリツイート数順
-    private function multisortRetweetCount($tweetsData){
+    //設定された方式のソートメソッド実行
+    private function multisortMethod($tweetsData){
+        $sortMethod = 'multisort_'.$this->SerchAction->use_sort_method;
+        if(!method_exists($this, $sortMethod)){
+            $sortMethod = 'multisort_RetweetPerHour';
+        }
+        return $this->$sortMethod($tweetsData);
+    }
+    // ソートメソッド===================================================
+	//日付ごと区切りのリツイート数順 RetweetDateSeparator
+    private function multisort_RetweetDateSeparator($tweetsData){
+        $mes = "実行sort_method: RetweetDateSeparator"."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+
         $cmplist1 = array();
         $cmplist2 = array();
         foreach($tweetsData as $tweet){
@@ -300,8 +321,11 @@ class Cron_Tweets_Popularity_Logic
         return $tweetsData;
     }
 
-	//一時間あたりのリツイート数計算
-    private function multisortRetweetCount2($tweetsData){
+	//一時間あたりのリツイート数計算 RetweetPerHour
+    private function multisort_RetweetPerHour($tweetsData){
+        $mes = "実行sort_method: RetweetPerHour"."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+
         $cmplist1 = array();
         $cmplist2 = array();
         foreach($tweetsData as $tweet){
@@ -319,7 +343,7 @@ class Cron_Tweets_Popularity_Logic
         				);
         return $tweetsData;
     }
-
+    //===============================================================
 
 }
 

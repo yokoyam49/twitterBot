@@ -30,6 +30,13 @@ class Cron_Tweets_Popularity
     public function Exec()
     {
         foreach($this->Accounts as $Account){
+            //インターバル時間過ぎていない場合、処理スキップ
+            if(($Account->retweet_interval_time - 15) > $this->LogicObj->getLastExecTime($Account->id)){
+                $mes = date("Y-m-d H:i:s")." CRON: ".$Account->account_name." クーロンインターバル中(処理スキップ)\n";
+                error_log($mes, 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
+                continue;
+            }
+
             $mes = date("Y-m-d H:i:s")." CRON: ".$Account->account_name." ツイート処理開始\n";
             error_log($mes, 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
 

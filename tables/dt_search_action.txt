@@ -12,4 +12,5 @@ ng_words	TEXT		NGワード スペース区切り
 result_type	VARCHAR(20)	検索タイプ popular,recent,mixed
 search_count_popular	INT	result_type:popularでの検索設定数
 search_count_recent	INT	result_type:recentでの検索設定数
+use_sort_method	VARCHAR(255)	並び替えに使用するメソッド名
 minimum_retweet_num	INT	最低リツイート数　これ以下はリツイートしない
