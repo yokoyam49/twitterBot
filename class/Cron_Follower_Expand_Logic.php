@@ -2,6 +2,7 @@
 require_once(_TWITTER_API_PATH."followers/followers_ids.php");
 require_once(_TWITTER_API_PATH."friendships/friendships_create.php");
 require_once(_TWITTER_API_PATH."friendships/friendships_destroy.php");
+require_once(_TWITTER_API_PATH."users/users_lookup.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 
 use Abraham\TwitterOAuth\TwitterOAuth;
@@ -20,6 +21,9 @@ class Cron_Follower_Expand_Logic
     private $Follow_Num_Inday;
     //フォロー数とフォロワー数の差の最大値
     private $Difference_Follow;
+    //最終アクティブ判定日 この日数以上動きがないユーザーはアタックしない
+    private $Last_Active_Daypast;
+
 
     // apiから取得情報
     //自分のフォロワー一覧
@@ -67,12 +71,14 @@ class Cron_Follower_Expand_Logic
 
     private function DBgetFollowParm()
     {
-        $sql = "SELECT follownum_inday, difference_follow FROM dt_follower_action WHERE account_id = ?";
+        $sql = "SELECT follownum_inday, difference_follow, last_active_daypast FROM dt_follower_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         //一日にフォローする数
         $this->Follow_Num_Inday = $res[0]->follownum_inday;
         //フォロー数とフォロワー数の差の最大値
         $this->Difference_Follow = $res[0]->difference_follow;
+        //最終アクティブ判定日 この日数以上動きがないユーザーはアタックしない
+        $this->Last_Active_Daypast = $res[0]->last_active_daypast;
     }
 
     //apiよりフォロワーリスト取得しフォロー状況をDBに反映
@@ -201,12 +207,13 @@ class Cron_Follower_Expand_Logic
     public function GoFollowing()
     {
         //フォローターゲット取得
-        $TagetUsers = $this->getTargetUser();
-        if(count($TagetUsers)){
+        //$TagetUsers = $this->getTargetUser();
+        list($ActiveUser, $NonActiveUser) = $this->getTargetUser();
+        if(count($ActiveUser)){
         	$insert_value = array();
-            foreach($TagetUsers as $user_id){
+            foreach($ActiveUser as $user){
                 $option = array(
-                                    'user_id' => $user_id,
+                                    'user_id' => $user->id,
                                     'follow' => false
                                 );
                 $FriendshipsCreate = new friendships_create($this->twObj);
@@ -220,21 +227,37 @@ class Cron_Follower_Expand_Logic
                 }
                 unset($apiErrorObj);
                 //インサートバリュー生成
-                $values = array($this->Account_ID, $user_id, 1, 0);
+                $values = array($this->Account_ID, $user->id, 1, $this->getUserLastActiveTime($user), 1, 0);
                 $insert_value[] = "( ".implode(", ", $values).", now(), now() )";
             }
             //フォロー情報DBセット
-            $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, following, followed, following_date, create_date ) VALUES ";
+            $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, active_user_flg, last_active_time, following, followed, following_date, create_date ) VALUES ";
             $sql .= implode(", ", $insert_value);
             $res = $this->DBobj->exec($sql);
         }
-        $mes = date("Y-m-d H:i:s")." ".count($TagetUsers)."件 フォローしました\n";
+        $mes = date("Y-m-d H:i:s")." ".count($ActiveUser)."件 フォローしました\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        
+        //ノンアクティブユーザー情報セット
+        if(count($NonActiveUser)){
+            $insert_value = array();
+            foreach($NonActiveUser as $user){
+                $values = array($this->Account_ID, $user->id, 0, $this->getUserLastActiveTime($user), 0, 0);
+                $insert_value[] = "( ".implode(", ", $values).", now() )";
+            }
+            $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, active_user_flg, last_active_time, following, followed, create_date ) VALUES ";
+            $sql .= implode(", ", $insert_value);
+            $res = $this->DBobj->exec($sql);
+            $mes = date("Y-m-d H:i:s")." ノンアクティブ判定ユーザー： ".count($NonActiveUser)."件 \n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        }
     }
 
     private function getTargetUser()
     {
         $TagetUsers = array();
+        $ActiveUser = array();
+        $NonActiveUser = array();
         $sql = "SELECT target_user_id, target_screen_name FROM dt_follower_target WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         foreach($res as $rec){
@@ -262,8 +285,17 @@ class Cron_Follower_Expand_Logic
                         $TagetUsers[] = $user_id;
                     }
                     if(count($TagetUsers) >= $this->Follow_Num_Inday){
-                        //ターゲット取得完了
-                        return $TagetUsers;
+                        //アクティブ抽出処理
+                        list($actives, $nonacs) = $this->checkActiveUser($TagetUsers);
+                        $NonActiveUser = array_merge($NonActiveUser, $nonacs);
+                        foreach($actives as $active){
+                            array_push($ActiveUser, $active);
+                            if(count($ActiveUser) >= $this->Follow_Num_Inday){
+                                //ターゲット取得完了
+                                return array($ActiveUser, $NonActiveUser);
+                            }
+                        }
+                        $TagetUsers = array();
                     }
                 }
 
@@ -292,6 +324,48 @@ class Cron_Follower_Expand_Logic
         }else{
             return false;
         }
+    }
+
+    private function checkActiveUser($TagetUsers)
+    {
+        $ActveUser = array();
+        $NonacUser = array();
+        $option = array(
+                            'user_id' => implode(",", $TagetUsers),
+                            'include_entities' => false
+                        );
+        $UsersLookup = new users_lookup($this->twObj);
+        $api_res = $UsersLookup->setOption($option)->Request();
+        //エラーチェック
+        $apiErrorObj = new Api_Error($api_res);
+        if($apiErrorObj->error){
+            //エラーのとき、チェックをあきらめる
+            return array($TagetUsers, array());
+        }
+        unset($apiErrorObj);
+
+        foreach($api_res as $user){
+            if( floor((time() - strtotime($user->created_at)) / 86400) < $this->Last_Active_Daypast
+                or (isset($user->status->created_at) and floor((time() - strtotime($user->status->created_at)) / 86400) < $this->Last_Active_Daypast) ){
+                $ActveUser[] = $user;
+            }else{
+                $NonacUser[] = $user;
+            }
+        }
+
+        return array($ActveUser, $NonacUser);
+    }
+
+    private function getUserLastActiveTime($user){
+        $res_time = "";
+        if(!isset($user->status->created_at)){
+            $res_time = $user->created_at;
+        }elseif(strtotime($user->created_at) <= strtotime($user->status->created_at)){
+            $res_time = $user->status->created_at;
+        }else{
+            $res_time = $user->created_at;
+        }
+        return date("Y-m-d H:i:s", strtotime($res_time));
     }
 
 

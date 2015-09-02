@@ -9,6 +9,8 @@ dt_follower_cont
 id		INT,key,auto_increment
 account_id 	INT	アカウント管理テーブルID
 user_id		VARCHAR(255)	フォロー相手ユーザーID
+active_user_flg	TINYINT(1)	アクティブなユーザーか アクティブ:1 ノンアク:0
+last_active_time	TIMESTAMP	ラストアクティブタイム
 following	TINYINT(1)	自分が相手をフォローしているか　してる:1 してない:0
 following_date	TIMESTAMP	フォローした日時
 followed	TINYINT(1)	相手が自分をフォローしているか
