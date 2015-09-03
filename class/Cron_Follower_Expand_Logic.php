@@ -227,7 +227,7 @@ class Cron_Follower_Expand_Logic
                 }
                 unset($apiErrorObj);
                 //インサートバリュー生成
-                $values = array($this->Account_ID, $user->id, 1, $this->getUserLastActiveTime($user), 1, 0);
+                $values = array((string)$this->Account_ID, (string)$user->id, "1", "'".$this->getUserLastActiveTime($user)."'", "1", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now(), now() )";
             }
             //フォロー情報DBセット
@@ -242,7 +242,7 @@ class Cron_Follower_Expand_Logic
         if(count($NonActiveUser)){
             $insert_value = array();
             foreach($NonActiveUser as $user){
-                $values = array($this->Account_ID, $user->id, 0, $this->getUserLastActiveTime($user), 0, 0);
+                $values = array((string)$this->Account_ID, (string)$user->id, "0", "'".$this->getUserLastActiveTime($user)."'", "0", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now() )";
             }
             $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, active_user_flg, last_active_time, following, followed, create_date ) VALUES ";
@@ -340,7 +340,13 @@ class Cron_Follower_Expand_Logic
         $apiErrorObj = new Api_Error($api_res);
         if($apiErrorObj->error){
             //エラーのとき、チェックをあきらめる
-            return array($TagetUsers, array());
+            $resUsers = array();
+            foreach($TagetUsers as $user){
+                $resUser = new stdClass();
+                $resUser->id = $user;
+                $resUsers[] = $resUser;
+            }
+            return array($resUsers, array());
         }
         unset($apiErrorObj);
 
@@ -358,6 +364,9 @@ class Cron_Follower_Expand_Logic
 
     private function getUserLastActiveTime($user){
         $res_time = "";
+        if(!isset($user->status->created_at) and !isset($user->created_at)){
+            return date("Y-m-d H:i:s");
+        }
         if(!isset($user->status->created_at)){
             $res_time = $user->created_at;
         }elseif(strtotime($user->created_at) <= strtotime($user->status->created_at)){
