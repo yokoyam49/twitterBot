@@ -346,6 +346,8 @@ class Cron_Follower_Expand_Logic
                 $resUser->id = $user;
                 $resUsers[] = $resUser;
             }
+            $mes = $apiErrorObj->errorMes_Str."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
             return array($resUsers, array());
         }
         unset($apiErrorObj);
