@@ -106,6 +106,12 @@ class Cron_Tweets_Popularity_Logic
         return $this;
     }
 
+    //検索文言テスト用
+    public function setSearchStr($search_str)
+    {
+        $this->SerchAction->search_str_1 = $search_str;
+    }
+
     public function setViewMode($id){
         $this->setAccountId($id);
     	$this->viewMode = true;

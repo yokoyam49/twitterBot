@@ -31,6 +31,11 @@ $Popularity_logic->setResultType('recent');
 //ロジックにアカウントセット
 $Popularity_logic->setAccountId($Account->id);
 
+//検索文言テスト用
+if(isset($_REQUEST['search']) and strlen($_REQUEST['search'])){
+    $Popularity_logic->setSearchStr(urldecode($_REQUEST['search']));
+}
+
 try{
     //検索 人気順並び替え
     $Popularity_logic->SearchTweets();
