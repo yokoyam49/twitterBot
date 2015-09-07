@@ -333,6 +333,10 @@ class Cron_Follower_Expand_Logic
         $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
         $res = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        //メール送信
+        $subject = 'アカウント：'.$this->AccountInfo->notice;
+        $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
+        
         return $TagetUsers;
     }
 

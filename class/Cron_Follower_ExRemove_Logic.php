@@ -20,7 +20,7 @@ class Cron_Follower_ExRemove_Logic
     //一日にリムーブする最大数設定
     private $MaxRemove_inDay = 3;
     //これよりフォロワー数が多いアカウントをリムーブ
-    private $LargeThanForrow_num = 1000;
+    private $LargeThanForrow_num = 500;
 
 
     //OAuthオブジェクト
