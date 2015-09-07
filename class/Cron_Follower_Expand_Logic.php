@@ -36,6 +36,8 @@ class Cron_Follower_Expand_Logic
 
     private $logFile;
 
+    private $alert_mail_add = array('taroimotaro2222@docomo.ne.jp', '96kanabe@ezweb.ne.jp');
+
     public function __construct()
     {
         $this->DBobj = new DB_Base();
@@ -138,6 +140,17 @@ class Cron_Follower_Expand_Logic
         $removed_user = array();
         $sql = "SELECT user_id FROM dt_follower_cont WHERE account_id = ? AND followed = 1";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
+        //フォロー数が突然0になっている 凍結の疑い
+        if($res and count($res) and !count($follower_list)){
+            $mes = "フォロワー数が０になっています。アカウントを確認してください。\n";
+            $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
+            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+            //メール送信
+            $subject = 'アカウント：'.$this->AccountInfo->notice;
+            $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
+            //処理中止
+            throw new Exception($mes);
+        }
         if($res and count($res)){
 	        foreach($res as $user){
 	            if(!isset($listMap[$user->user_id])){
@@ -179,8 +192,18 @@ class Cron_Follower_Expand_Logic
             //リムーブする必要なし
             return;
         }
+        //リムーブ数が妙に増大
+        if($must_remove_num > ($this->Follow_Num_Inday * 2)){
+            $must_remove_num = $this->Follow_Num_Inday * 2;
+            $mes = 'リムーブ数が増大しています。アカウントを確認してください。';
+            $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
+            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+            //メール送信
+            $subject = 'アカウント：'.$this->AccountInfo->notice;
+            $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
+        }
         $remove_users = array();
-        for($i = 0; $i < $must_remove_num; $i++){
+        for($i = 0; $i < $must_remove_num and $i < count($res); $i++){
             //リムーブ
             $option = array(
                                 'user_id' => $res[$i]->user_id,
@@ -190,7 +213,6 @@ class Cron_Follower_Expand_Logic
             //エラーチェック リムーブできなくてもDBセット
             $apiErrorObj = new Api_Error($api_res);
             if($apiErrorObj->error){
-                //throw new Exception($apiErrorObj->errorMes_Str);
                 $mes = $apiErrorObj->errorMes_Str;
                 error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
             }
@@ -379,6 +401,19 @@ class Cron_Follower_Expand_Logic
         return date("Y-m-d H:i:s", strtotime($res_time));
     }
 
+    private function sendAlertMail($to, $subject, $body)
+    {
+        if(!is_array($to)){
+            $to_arr = array($to);
+        }else{
+            $to_arr = $to;
+        }
+        $from = "twitter_admin@ainyan.minibird.jp";
+        foreach($to_arr as $to_ad){
+            //送信
+            mb_send_mail($to_ad, $subject, $body, "From:".$from);
+        }
+    }
 
 }
 

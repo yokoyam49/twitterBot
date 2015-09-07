@@ -15,6 +15,8 @@ following	TINYINT(1)	自分が相手をフォローしているか　してる:1 してない:0
 following_date	TIMESTAMP	フォローした日時
 followed	TINYINT(1)	相手が自分をフォローしているか
 followed_date	TIMESTAMP	フォローされた(のが判明した)日時
+ex_remove_flg	TINYINT(1)	特殊リムーブ処理対象か(規定フォロワー数以上) 対象：1 非対象：0 未チェック：NULL
+follower_count	INT		
 removing_date	TIMESTAMP	リムーブした日時
 removed_date	TIMESTAMP	リムーブされた(のが判明した)日時
 notice		TEXT		備考

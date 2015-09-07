@@ -14,5 +14,6 @@ access_token_secret	VARCHAR(255)	トークン情報
 use_flg		TINYINT(1)	使用フラグ
 retweet_on_flg	TINYINT(1)	リツイート動作フラグ
 follow_on_flg	TINYINT(1)	フォロワー動作フラグ
+extraremove_on_flg	TINYINT(1)	フォロー数が極端に多いアカウントを整理していく処理を動作させるかフラグ
 retweet_interval_time	INT	リツイートインターバル時間(30分単位)
 notice		TEXT	備考

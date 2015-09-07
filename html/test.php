@@ -59,7 +59,7 @@ try{
 <title>ツイートテスト</title>
 </head>
 <body>
-
+<a href="./test_search.php">戻る</a>
 <?php
 echo '判定ID：'.$tweet->id."<br><br>\n";
 foreach ($Popularity_logic->getSearch_Res() as $result){

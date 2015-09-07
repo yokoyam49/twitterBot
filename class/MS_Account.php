@@ -38,6 +38,13 @@ class MS_Account
         return $this->DBobj->query($sql);
     }
 
+    //特殊リムーブ動作が有効なものだけ取得
+    public function getExtraRemoveValidAccount()
+    {
+        $sql = "SELECT * FROM ms_account WHERE use_flg = 1 AND extraremove_on_flg = 1";
+        return $this->DBobj->query($sql);
+    }
+
     //指定IDアカウント取得
     public function getAccountById($id)
     {
