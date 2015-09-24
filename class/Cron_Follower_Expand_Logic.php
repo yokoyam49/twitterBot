@@ -3,6 +3,7 @@ require_once(_TWITTER_API_PATH."followers/followers_ids.php");
 require_once(_TWITTER_API_PATH."friendships/friendships_create.php");
 require_once(_TWITTER_API_PATH."friendships/friendships_destroy.php");
 require_once(_TWITTER_API_PATH."users/users_lookup.php");
+require_once(_TWITTER_CLASS_PATH."Mail.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 
 use Abraham\TwitterOAuth\TwitterOAuth;
@@ -147,7 +148,7 @@ class Cron_Follower_Expand_Logic
             $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
             //メール送信
             $subject = 'アカウント：'.$this->AccountInfo->notice;
-            $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
+            Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
             //処理中止
             throw new Exception($mes);
         }
@@ -200,7 +201,7 @@ class Cron_Follower_Expand_Logic
             $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
             //メール送信
             $subject = 'アカウント：'.$this->AccountInfo->notice;
-            $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
+            Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
         }
         $remove_users = array();
         for($i = 0; $i < $must_remove_num and $i < count($res); $i++){
@@ -314,6 +315,8 @@ class Cron_Follower_Expand_Logic
                             array_push($ActiveUser, $active);
                             if(count($ActiveUser) >= $this->Follow_Num_Inday){
                                 //ターゲット取得完了
+                                $mes = date("Y-m-d H:i:s")." フォローターゲット取得ループ数： ".($i + 1)."回 \n";
+                                error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                                 return array($ActiveUser, $NonActiveUser);
                             }
                         }
@@ -335,8 +338,8 @@ class Cron_Follower_Expand_Logic
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         //メール送信
         $subject = 'アカウント：'.$this->AccountInfo->notice;
-        $this->sendAlertMail($this->alert_mail_add, $subject, $mes);
-        
+        Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
+
         return $TagetUsers;
     }
 
