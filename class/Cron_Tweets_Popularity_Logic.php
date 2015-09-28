@@ -236,6 +236,10 @@ class Cron_Tweets_Popularity_Logic
         }
         unset($apiErrorObj);
 
+        //ログ出力
+        $mes = "リツイート成功 RetweetID: ".$tweet->id."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+
         return $this;
     }
 
