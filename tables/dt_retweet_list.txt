@@ -10,6 +10,8 @@ account_id 	INT		アカウント管理テーブルID
 tweet_id	VARCHAR(255)	自分がリツイートしたオリジナルツイートID
 search_str	VARCHAR(255)	検索文言
 tweet_text	TEXT		ツイート本文
+retweet_success_flg	TINYINT(1)	リツイートが成功したか
+error_mes	TEXT		リツイート時にエラーが発生していた場合のエラーメッセージ
 create_date	TIMESTAMP
 retweet_count	INT		リツイートカウント
 
