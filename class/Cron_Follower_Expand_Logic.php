@@ -25,6 +25,8 @@ class Cron_Follower_Expand_Logic
     //最終アクティブ判定日 この日数以上動きがないユーザーはアタックしない
     private $Last_Active_Daypast;
 
+    //DBにアラートメッセージ追加時のメッセージタイプ
+    private $alert_mes_type = 'alert';
 
     // apiから取得情報
     //自分のフォロワー一覧
@@ -144,8 +146,8 @@ class Cron_Follower_Expand_Logic
         //フォロー数が突然0になっている 凍結の疑い
         if($res and count($res) and !count($follower_list)){
             $mes = "フォロワー数が０になっています。アカウントを確認してください。\n";
-            $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
-            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+            $sql = "INSERT INTO dt_message ( account_id, type, message1, check_flg, create_date) VALUES ( ?, ?, ?, 0, now())";
+            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $this->alert_mes_type, $mes));
             //メール送信
             $subject = 'アカウント：'.$this->AccountInfo->notice;
             Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
@@ -197,8 +199,8 @@ class Cron_Follower_Expand_Logic
         if($must_remove_num > ($this->Follow_Num_Inday * 2)){
             $must_remove_num = $this->Follow_Num_Inday * 2;
             $mes = 'リムーブ数が増大しています。アカウントを確認してください。';
-            $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
-            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+            $sql = "INSERT INTO dt_message ( account_id, type, message1, check_flg, create_date) VALUES ( ?, ?, ?, 0, now())";
+            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $this->alert_mes_type, $mes));
             //メール送信
             $subject = 'アカウント：'.$this->AccountInfo->notice;
             Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
@@ -333,8 +335,8 @@ class Cron_Follower_Expand_Logic
         }
         //ターゲット枯渇
         $mes = "フォローターゲットが枯渇しました。新たなターゲットを設定してください。\n";
-        $sql = "INSERT INTO dt_message ( account_id, message1, check_flg, create_date) VALUES ( ?, ?, 0, now())";
-        $res = $this->DBobj->execute($sql, array($this->Account_ID, $mes));
+        $sql = "INSERT INTO dt_message ( account_id, type, message1, check_flg, create_date) VALUES ( ?, ?, ?, 0, now())";
+        $res = $this->DBobj->execute($sql, array($this->Account_ID, $this->alert_mes_type, $mes));
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         //メール送信
         $subject = 'アカウント：'.$this->AccountInfo->notice;

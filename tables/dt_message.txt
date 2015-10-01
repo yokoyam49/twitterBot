@@ -8,6 +8,8 @@ dt_message
 ○フィールド
 id		INT,key,auto_increment
 account_id 	INT	アカウント管理テーブルID
+type		VARCHAR(255)	メッセージ種別
+process		VARCHAR(255)	発生プロセス
 message1	TEXT	メッセージ内容
 message2	TEXT
 message3	TEXT

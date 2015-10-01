@@ -1,6 +1,7 @@
 <?php
 require_once(_TWITTER_CLASS_PATH."Cron_Tweets_Popularity_Logic.php");
 require_once(_TWITTER_CLASS_PATH."MS_Account.php");
+require_once(_TWITTER_CLASS_PATH."DT_Message.php");
 require_once(_TWITTER_CLASS_PATH."DB_Base.php");
 
 class Cron_Tweets_Popularity
@@ -50,14 +51,19 @@ class Cron_Tweets_Popularity
                 $tweet = $this->LogicObj->getAnDuplicateTweetID();
                 if(is_null($tweet)){
                     $mes = "TwieetID: 全て重複"."\n";
-                    throw new Exception($mes);
+                    error_log($e->getMessage(), 3, _TWITTER_LOG_PATH.$this->logFile);
+                    //throw new Exception($mes);
+                }else{
+                    //リツイート
+                    $this->LogicObj->Retweets($tweet);
                 }
-                //リツイート
-                $this->LogicObj->Retweets($tweet);
 
             }catch(Exception $e){
                 //ログ出力
                 error_log($e->getMessage(), 3, _TWITTER_LOG_PATH.$this->logFile);
+                //メッセージテーブルに書き出し
+                $MTobj = new DT_Message();
+                $MTobj->addMessage($e->getMessage(), $Account->id, 'error', $e->getFile().':'.$e->getLine());
             }
 
             $mes = date("Y-m-d H:i:s")." CRON: ".$Account->account_name." ツイート処理終了\n";
