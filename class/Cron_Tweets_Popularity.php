@@ -51,7 +51,7 @@ class Cron_Tweets_Popularity
                 $tweet = $this->LogicObj->getAnDuplicateTweetID();
                 if(is_null($tweet)){
                     $mes = "TwieetID: 全て重複"."\n";
-                    error_log($e->getMessage(), 3, _TWITTER_LOG_PATH.$this->logFile);
+                    error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                     //throw new Exception($mes);
                 }else{
                     //リツイート
