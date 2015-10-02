@@ -1,5 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Tokyo');
+ini_set( 'display_errors', 1 );
 
 //システムルート
 //define('_SYSTEM_ROOT', '/var/www/html/');
@@ -10,6 +11,12 @@ define('_TWITTER_OAUTH_PATH', _SYSTEM_ROOT.'twitteroauth/');
 define('_TWITTER_API_PATH', _SYSTEM_ROOT.'twitterapi/');
 //class
 define('_TWITTER_CLASS_PATH', _SYSTEM_ROOT.'class/');
+//smarty
+define('_TWITTER_SMARTY_PATH', _SYSTEM_ROOT.'smarty/');
+//smartyテンプレート
+define('_TWITTER_TEMPLATE_PATH', _SYSTEM_ROOT.'templates/');
+//ドキュメントパス
+define('_DOCUMENT_PATH', _SYSTEM_ROOT.'public_html/');
 //log
 define('_TWITTER_LOG_PATH', _SYSTEM_ROOT.'log/');
 
