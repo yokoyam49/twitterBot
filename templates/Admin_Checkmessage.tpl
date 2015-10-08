@@ -15,16 +15,11 @@
 <a class="btn btn-default btn-xs" href="#" role="button">確認済みも表示</a>
 <br>
 <ul class="pagination">
-    <li{if $pagenation.page <= 1} class="disabled"{/if}><a href="/admin/Checkmessage/{$pagenation.page - 1}/">&laquo;</a></li>
-    {section name=pages start=$pagenation.min_page loop=$pagenation.max_page-$pagenation.min_page-1}
-    {$smarty.section.pages.index}|
-    <li class="active"><a href="#">1</a></li>
-    <li><a href="#">2</a></li>
-    <li><a href="#">3</a></li>
-    <li><a href="#">4</a></li>
-    <li><a href="#">5</a></li>
-    {/section}
-    <li><a href="#">&raquo;</a></li>
+    <li{if $pagenation.page <= 1} class="disabled"{/if}><a href="/admin/Checkmessage/index/{$pagenation.page - 1}/">&laquo;</a></li>
+    {foreach from=$pagenation.page_buttons key=key item=item}
+    <li{if $item == $pagenation.page} class="active"{/if}><a href="/admin/Checkmessage/index/{$item}/">{$item}</a></li>
+    {/foreach}
+    <li{if $pagenation.page >= $pagenation.max_page} class="disabled"{/if}><a href="/admin/Checkmessage/index/{$pagenation.page + 1}/">&raquo;</a></li>
 </ul>
 
 {if $mes_list}

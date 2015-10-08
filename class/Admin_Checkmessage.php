@@ -13,7 +13,7 @@ class Admin_Checkmessage
     private $parms;
 
     //固定設定
-    private $display_num = 3;//一ページに表示する件数
+    private $display_num = 20;//一ページに表示する件数
     private $pagenation_num = 5;//ページネーションに何ページ分ボタンを表示させるか
 
     public function __construct()
@@ -56,21 +56,23 @@ class Admin_Checkmessage
         $offset = $this->display_num * $page;
 
         //確認済みも表示チェック
-        if($request->checked_disp){
-            $checkedDisp = true;
-        }else{
-            $checkedDisp = false;
-        }
+        // if($request->checked_disp){
+        //     $checkedDisp = true;
+        // }else{
+        //     $checkedDisp = false;
+        // }
+        $checkedDisp = true;
 
         //ページネーション用
         $mes_count = $this->MessageObj->getMessageCount($checkedDisp, $Account_ID);
         $page_count = (int)ceil($mes_count / $this->display_num);
         $min_page = ($page - floor($this->pagenation_num / 2)) > 0 ? (int)($page - floor($this->pagenation_num / 2)) : 1;
         $max_page = ($page + floor($this->pagenation_num / 2)) < $page_count ? (int)($page + floor($this->pagenation_num / 2)) : $page_count;
+        $page_buttons = range($min_page, $max_page);
         //リスト取得
         $mes_list = $this->MessageObj->getMessages($checkedDisp, $Account_ID, $limit, $offset);
-var_dump(array('page' => ($page + 1), 'page_count' => $page_count, 'min_page' => $min_page, 'max_page' => $max_page));
-        $this->ViewObj->assign('pagenation', array('page' => ($page + 1), 'page_count' => $page_count, 'min_page' => $min_page, 'max_page' => $max_page));
+
+        $this->ViewObj->assign('pagenation', array('page' => ($page + 1), 'page_count' => $page_count, 'page_buttons' => $page_buttons, 'min_page' => $min_page, 'max_page' => $max_page));
         $this->ViewObj->assign('mes_list', $mes_list);
         $this->ViewObj->display('Admin_Checkmessage.tpl');
     }
