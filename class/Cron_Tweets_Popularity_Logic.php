@@ -3,6 +3,7 @@
 require_once(_TWITTER_API_PATH."search/search_tweets.php");
 require_once(_TWITTER_API_PATH."statuses/statuses_homeTimeline.php");
 require_once(_TWITTER_API_PATH."statuses/statuses_retweet.php");
+require_once(_TWITTER_CLASS_PATH."DT_Message.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 
 use Abraham\TwitterOAuth\TwitterOAuth;
@@ -85,7 +86,7 @@ class Cron_Tweets_Popularity_Logic
     private function DBgetInitInfo()
     {
         //検索オプション取得
-        $sql = "SELECT search_str_1, ng_words, result_type, search_count_popular, search_count_recent, use_sort_method, minimum_retweet_num FROM dt_search_action WHERE account_id = ?";
+        $sql = "SELECT search_str_1, ng_words, result_type, search_count_popular, search_count_recent, use_sort_method, minimum_retweet_num, minimum_favorite_num FROM dt_search_action WHERE account_id = ?";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
         $this->SerchAction = $res[0];
         $this->ResultType_Search_Count['popular'] = $res[0]->search_count_popular;
@@ -236,6 +237,9 @@ class Cron_Tweets_Popularity_Logic
             $success_flg = 0;
             //ログ出力
             error_log($apiErrorObj->errorMes_Str, 3, _TWITTER_LOG_PATH.$this->logFile);
+            //メッセージテーブルに書き出し
+            $MTobj = new DT_Message();
+            $MTobj->addMessage($apiErrorObj->errorMes_Str, (int)$this->Account_ID, 'error', 'RetweetsProcese');
         }else{
             //成功時ログ出力
             $mes = "リツイート成功 RetweetID: ".$tweet->id."\n";
@@ -251,9 +255,10 @@ class Cron_Tweets_Popularity_Logic
     }
 
     //最小リツイート数をクリアしているかチェック クリア:true アウト:false
+    //追加：最小フェイバリッド数をクリアしているかチェック
     private function checkRetweetNum($tweet)
     {
-        if($tweet->retweet_count < $this->SerchAction->minimum_retweet_num){
+        if($tweet->retweet_count < $this->SerchAction->minimum_retweet_num or $tweet->favorite_count < $this->SerchAction->minimum_favorite_num){
             return false;
         }else{
             return true;
