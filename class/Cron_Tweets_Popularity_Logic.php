@@ -128,7 +128,7 @@ class Cron_Tweets_Popularity_Logic
     //重複していないID取得 全て重複時、nullリターン
     public function getAnDuplicateTweetID(){
         foreach($this->Search_Res as $tweet){
-            if($this->checkRetweeted((string)$tweet->id) and $this->checkNgWord($tweet)){
+            if($this->checkRetweeted((string)$tweet->id) and $this->checkNgWord($tweet) and $this->checkRetweetNum($tweet)){
                 return $tweet;
             }
         }
@@ -219,11 +219,12 @@ class Cron_Tweets_Popularity_Logic
     }
 
     public function Retweets($tweet){
-        if(!$this->checkRetweetNum($tweet)){
-            $mes = $tweet->id.": retweet_count: ".$tweet->retweet_count." 最低リツイート数設定に達しなかったため、リツイート未実行"."\n";
-            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
-            return $this;
-        }
+    	//--getAnDuplicateTweetIDで実行
+        //if(!$this->checkRetweetNum($tweet)){
+        //    $mes = $tweet->id.": retweet_count: ".$tweet->retweet_count." 最低リツイート数設定に達しなかったため、リツイート未実行"."\n";
+        //    error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        //    return $this;
+        //}
         $retweetObj = new statuses_retweet($this->twObj);
         $apires = $retweetObj->setRetweetId($tweet->id)->Request();
 
@@ -259,6 +260,8 @@ class Cron_Tweets_Popularity_Logic
     private function checkRetweetNum($tweet)
     {
         if($tweet->retweet_count < $this->SerchAction->minimum_retweet_num or $tweet->favorite_count < $this->SerchAction->minimum_favorite_num){
+        	$mes = "リツイート、フェイバリッド数が最低設定未満 RetweetID: ".$tweet->id." retweet_count:".$tweet->retweet_count." favorite_count:".$tweet->favorite_count."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
             return false;
         }else{
             return true;
@@ -286,13 +289,19 @@ class Cron_Tweets_Popularity_Logic
 
         $ng_words = explode(' ', $this->SerchAction->ng_words);
         foreach($ng_words as $ng_word){
-            if(mb_stripos($tweet->text, $ng_word) !== false ){
+            if(mb_stripos($tweet->text, $ng_word, 0, "UTF-8") !== false ){
+            	$mes = "NGワードを含んでいる RetweetID: ".$tweet->id." NGワード:".$ng_word." tweet_text:".$tweet->text."\n";
+            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                 return false;
             }
-            if(mb_stripos($tweet->user->name, $ng_word) !== false ){
+            if(mb_stripos($tweet->user->name, $ng_word, 0, "UTF-8") !== false ){
+            	$mes = "NGワードを含んでいる RetweetID: ".$tweet->id." NGワード:".$ng_word." user_name:".$tweet->user->name."\n";
+            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                 return false;
             }
             if( isset($tweet->id_str) and $tweet->id_str === $ng_word ){
+            	$mes = "NGワードを含んでいる RetweetID: ".$tweet->id." NGワード:".$ng_word." id_str:".$tweet->id_str."\n";
+            	error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                 return false;
             }
         }
