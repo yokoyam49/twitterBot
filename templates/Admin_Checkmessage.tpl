@@ -9,10 +9,10 @@
 </head>
 <body>
 
-<button type="button" class="btn btn-info">更新</button>
+<!--<button type="button" class="btn btn-info">更新</button>-->
 <br>
 <br>
-<a class="btn btn-default btn-xs" href="#" role="button">確認済みも表示</a>
+<!--<a class="btn btn-default btn-xs" href="#" role="button">確認済みも表示</a>-->
 <br>
 <ul class="pagination">
     <li{if $pagenation.page <= 1} class="disabled"{/if}><a href="/admin/Checkmessage/index/{$pagenation.page - 1}/">&laquo;</a></li>
@@ -26,7 +26,7 @@
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>チェック</th>
+            <!--<th>チェック</th>-->
             <th>発生日時</th>
             <th>アカウント</th>
             <th>種別</th>
@@ -36,7 +36,7 @@
     <tbody>
         {foreach from=$mes_list key=key item=item}
         <tr>
-            <td><input type="checkbox" value="1"{if $item->check_flg} checked{/if}></td>
+            <!--<td><input type="checkbox" value="1"{if $item->check_flg} checked{/if}></td>-->
             <td>{$item->create_date}</td>
             <td>{$item->account_name}</td>
             <td>{$item->type}</td>
@@ -49,7 +49,7 @@
 メッセージがありません<br>
 {/if}
 
-<button type="button" class="btn btn-success">確認</button>
+<!--<button type="button" class="btn btn-success">確認</button>-->
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
