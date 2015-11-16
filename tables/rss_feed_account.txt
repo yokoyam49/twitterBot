@@ -1,0 +1,13 @@
+・rss_feed_account
+RSSフィード取得先情報TBL
+
+id			INT,key,auto_increment
+feed_type		VARCHAR(255)	RSSorAtom
+mb_name			TEXT	サイト名 日本語
+name			VARCHAR(255)	サイト名
+rssfeed_url		VARCHAR(255)	RSSフィードURL
+pre_column_info		TEXT		予備カラム設定情報
+use_flg			tinyint(1)	使用フラグ
+notice			TEXT	備考
+create_date		TIMESTAMP
+update_date		TIMESTAMP

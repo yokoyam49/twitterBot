@@ -9,6 +9,8 @@ define('_SYSTEM_ROOT', '/home/ainyan/ainyan.minibird.jp/');
 define('_TWITTER_OAUTH_PATH', _SYSTEM_ROOT.'twitteroauth/');
 //twitterapi
 define('_TWITTER_API_PATH', _SYSTEM_ROOT.'twitterapi/');
+//rssfeed
+define('_RSS_FEED_PATH', _SYSTEM_ROOT.'rssphp/src/');
 //class
 define('_TWITTER_CLASS_PATH', _SYSTEM_ROOT.'class/');
 //smarty
