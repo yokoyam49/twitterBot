@@ -32,8 +32,8 @@ $Popularity_logic->setResultType('recent');
 $Popularity_logic->setAccountId($Account->id);
 
 //検索文言テスト用
-if(isset($_REQUEST['search']) and strlen($_REQUEST['search'])){
-    $Popularity_logic->setSearchStr(urldecode($_REQUEST['search']));
+if(isset($_POST['search']) and strlen($_POST['search'])){
+    $Popularity_logic->setSearchStr($_POST['search']);
 }
 
 try{
@@ -61,6 +61,9 @@ try{
 <body>
 <a href="./test_search.php">戻る</a>
 <?php
+if(isset($_POST['search']) and strlen($_POST['search'])){
+    echo '検索文字列：'.$_POST['search']."<br><br>\n";
+}
 echo '判定ID：'.$tweet->id."<br><br>\n";
 foreach ($Popularity_logic->getSearch_Res() as $result){
     $id = $result->id;

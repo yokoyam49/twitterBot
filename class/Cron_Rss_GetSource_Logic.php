@@ -2,7 +2,7 @@
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 require_once(_RSS_FEED_PATH."Feed.php");
 
-class Cron_Rss_GetSource
+class Cron_Rss_GetSource_Logic
 {
 
     // 入力情報
@@ -46,7 +46,7 @@ class Cron_Rss_GetSource
             $this->Source = $FeedObj->loadAtom($this->RSS_AccountInfo->rssfeed_url);
         }
         else{
-            $msg = 'RSS_TYPEの設定が不正です';
+            //$msg = 'RSS_TYPEの設定が不正です';
             throw new Exception($msg);
         }
 
@@ -60,6 +60,19 @@ class Cron_Rss_GetSource
 
 
     }
+
+    public function test_outputFeed()
+    {
+        echo json_encode($this->Source->item);
+    }
+
+    private function analysis_hatenait()
+    {
+        foreach($this->Source->item as $feed_data){
+
+        }
+    }
+
 
 
 

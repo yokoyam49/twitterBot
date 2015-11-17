@@ -5,8 +5,9 @@
 </head>
 <body>
 <form name="search_form" id="search_form" method="post" action="./test.php">
-<input type="hidden" name="id" value="1">
+<input type="text" name="id" value="1"><br>
 <input type="text" name="search" value="">
+<input type="submit" value="テスト">
 </form>
 </body>
 </html>
