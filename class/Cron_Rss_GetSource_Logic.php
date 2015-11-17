@@ -49,7 +49,6 @@ class Cron_Rss_GetSource_Logic
             //$msg = 'RSS_TYPEの設定が不正です';
             throw new Exception($msg);
         }
-
     }
 
     public function setDB_FeedData()
@@ -63,7 +62,10 @@ class Cron_Rss_GetSource_Logic
 
     public function test_outputFeed()
     {
-        echo json_encode($this->Source->item);
+        $res = array();
+        foreach($this->Source->item as $feed_data){
+            echo json_encode($feed_data)."<br><br>";
+        }
     }
 
     private function analysis_hatenait()
