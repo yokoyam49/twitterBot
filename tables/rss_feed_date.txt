@@ -6,7 +6,9 @@ rss_account_id	INT		RSSアカウントID
 date		DATETIME	日付
 title		TEXT		タイトル
 content		TEXT		内容
+html_content	TEXT		内容(HTML)
 link_url	VARCHAR(255)	リンクURL
+subject		TEXT		種別
 memo1		TEXT		予備フィールド
 memo2		TEXT
 memo3		TEXT

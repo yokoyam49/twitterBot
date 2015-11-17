@@ -27,6 +27,7 @@ $ligicObj->setAccountId($RSS_AccountID);
 <body>
 
 <?php
+$ligicObj->analysis_oretekigame();
 $ligicObj->test_outputFeed();
 ?>
 </body>
