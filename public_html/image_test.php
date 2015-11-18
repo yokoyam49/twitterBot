@@ -3,7 +3,14 @@ require_once("../conf.php");
 
 require_once(_TWITTER_CLASS_PATH."Image.php");
 
-$imageObj = new Image("./img/Chrysanthemum.jpg");
-$imageObj->resizeImage("./img/Chrysanthemum_200_200.jpg", 200, 200);
+if(!isset($_REQUEST['image']) or !strlen($_REQUEST['image'])){
+    exit();
+}
+
+header('Content-Type: image/jpeg');
+
+$imageObj = new Image($_REQUEST['image']);
+$imageObj->resizeImage(200, 200)
+         ->output_ImageResource();
 
 

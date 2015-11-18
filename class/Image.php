@@ -7,6 +7,7 @@ class Image
     private $File_Path = null;
     private $Extension = null;
     private $ImageResource = null;
+    private $OutImageResource = null;
 
     public function __construct($file_path)
     {
@@ -19,6 +20,7 @@ class Image
         $path_parts = pathinfo($this->File_Path);
         $this->Extension = $path_parts['extension'];
 
+        $image_resource = null;
         switch($this->Extension) {
             case 'jpg':
             case 'jpeg':
@@ -33,33 +35,43 @@ class Image
                 $image_resource = imagecreatefromgif($this->File_Path);
                 break;
         }
-        $this->ImageResource = $image_resource;
+        if(!$image_resource){
+            return false;
+        }else{
+            $this->ImageResource = $image_resource;
+            return true;
+        }
     }
 
-    private function output_ImageResource($output_file_path, $out_resource)
+    public function output_ImageResource($output_file_path=null)
     {
+        if(!$this->OutImageResource){
+            return false;
+        }
+
         switch($this->Extension) {
             case 'jpg':
             case 'jpeg':
-                imagejpeg($out_resource, $output_file_path);
+                imagejpeg($this->OutImageResource, $output_file_path);
                 break;
 
             case 'png':
-                imagepng($out_resource, $output_file_path);
+                imagepng($this->OutImageResource, $output_file_path);
                 break;
 
             case 'gif':
-                imagegif($out_resource, $output_file_path);
+                imagegif($this->OutImageResource, $output_file_path);
                 break;
         }
     }
 
-    public function resizeImage($output_file_path, $width, $hight)
+    public function resizeImage($width, $hight)
     {
-        if(!file_exists($this->File_Path)){
-            return false;
+
+        if(!$this->set_ImageResource()){
+            $this->OutImageResource = null;
+            return $this;
         }
-        $this->set_ImageResource();
 
         $from_width = imagesx($this->ImageResource);
         $from_hight = imagesy($this->ImageResource);
@@ -83,14 +95,19 @@ class Image
 
 
         $out = imagecreatetruecolor($width, $hight);
-        //$ret = imagecopyresampled($out, $this->ImageResource, 0, 0, 0, 0, $x, $y, $to_x, $to_y);
-var_dump(array($from_x, $from_y, $width, $hight, $to_width, $to_hight));
+        //ブレンドモードを無効にする
+        imagealphablending($out, false);
+        //完全なアルファチャネル情報を保存するフラグをonにする
+        imagesavealpha($out, true);
+
         $ret = imagecopyresampled($out, $this->ImageResource, 0, 0, $from_x, $from_y, $width, $hight, $to_width, $to_hight);
         if($ret){
-            //ファイル出力
-            $this->output_ImageResource($output_file_path, $out);
+            $this->OutImageResource = $out;
+        }else{
+            $this->OutImageResource = null;
         }
-        return $ret;
+
+        return $this;
     }
 
 
