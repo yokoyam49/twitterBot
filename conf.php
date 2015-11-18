@@ -22,6 +22,9 @@ define('_DOCUMENT_PATH', _SYSTEM_ROOT.'public_html/');
 //log
 define('_TWITTER_LOG_PATH', _SYSTEM_ROOT.'log/');
 
+//画像パス
+define('_IMAGE_PATH', '/home/ainyan/blog.graph.jp/public_html/img/');
+
 //require
 //require_once(_TWITTER_OAUTH_PATH."src/TwitterOAuth.php");
 // OAuthライブラリの読み込み

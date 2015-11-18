@@ -81,17 +81,48 @@ class Cron_Rss_GetSource_Logic
         // }
     }
 
+    private function makeImage($image_url)
+    {
+        $make_image_size = array();
+        $make_image_size[] = array(
+                                    "width" => 200,
+                                    "hight" => 200
+                                    );
+        $make_image_size[] = array(
+                                    "width" => 300,
+                                    "hight" => 300
+                                    );
+        // 拡張子を取得
+        $path_parts = pathinfo($image_url);
+        $image_extension = $path_parts['extension'];
+
+        $image_path = _IMAGE_PATH.$this->RSS_AccountInfo->name;
+        if(!file_exists($image_path)){
+            mkdir($image_path, 0777);
+        }
+        foreach($make_image_size as $image_size){
+            $image_path .= "/".$this->RSS_AccountInfo->name."_".date("ymd_His")."_".$image_size['width']."x".$image_size['hight'].".".$image_extension;
+            $imageObj = new Image($image_url);
+            $imageObj->resizeImage($image_size['width'], $image_size['hight'])
+                     ->output_ImageResource($image_path);
+        }
+
+    }
+
     public function analysis_oretekigame()
     {
         $this->RSS_Cont_Arr = array();
         foreach($this->Source->item as $feed_data){
             $RSS_cont_obj = new RSS_Data_Container();
             $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
-            $RSS_cont_obj->date = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
             $RSS_cont_obj->title = (string)$feed_data->title;
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
             $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
+            if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
+
+            }
             $this->RSS_Cont_Arr[] = $RSS_cont_obj;
             unset($RSS_cont_obj);
         }
