@@ -134,10 +134,9 @@ class Cron_Rss_GetSource_Logic
             $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
             $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
 
-            if(!$RSS_cont_obj->checkDB_RssData()){
+            if($RSS_cont_obj->checkDB_RssData()){
                 //既に保存済みの記事でないとき
                 //画像取得
-echo 'hoge';
                 if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
                     $image_file_urls = $this->makeImage($m[1], $RSS_cont_obj->date);
                     if(count($image_file_urls)){
@@ -145,7 +144,7 @@ echo 'hoge';
                     }
                 }
                 //DBセット
-                //$RSS_cont_obj->setDB();
+                $RSS_cont_obj->setDB();
             }
 
             unset($RSS_cont_obj);
@@ -163,10 +162,10 @@ echo 'hoge';
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->content = (string)$feed_data->description;
 
-            if(!$RSS_cont_obj->checkDB_RssData()){
+            if($RSS_cont_obj->checkDB_RssData()){
                 //既に保存済みの記事でないとき
                 //DBセット
-                //$RSS_cont_obj->setDB();
+                $RSS_cont_obj->setDB();
             }
 
             unset($RSS_cont_obj);

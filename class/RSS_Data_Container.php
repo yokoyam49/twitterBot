@@ -67,7 +67,7 @@ class RSS_Data_Container
         }
         //LOGIC側で実行
         // //既に保存済みの記事ではないかチェック
-        // if(!$this->checkDB_RssData()){
+        // if($this->checkDB_RssData()){
         //     return false;
         // }
 
@@ -98,7 +98,7 @@ class RSS_Data_Container
     {
         $sql = "SELECT id FROM rss_feed_date WHERE rss_account_id = ? AND date = ?";
         $res = $this->DBobj->query($sql, array($this->data['rss_account_id'], $this->data['date']));
-var_dump($res);
+
         if(!$res or !count($res)){
             return true;
         }else{
