@@ -15,9 +15,18 @@ if(is_numeric($_REQUEST['id'])){
     exit();
 }
 
-$ligicObj = new Cron_Rss_GetSource_Logic();
+$RSS_AccountObj = new RSS_Account();
+$RSS_AccountInfo = $RSS_AccountObj->getAccountById($RSS_AccountID);
 
+$ligicObj = new Cron_Rss_GetSource_Logic();
 $ligicObj->setAccountId($RSS_AccountID);
+//デバッグモード
+$ligicObj->setDebug();
+$analysis_method = 'analysis_'.$RSS_AccountInfo->name;
+if(!method_exists($ligicObj, $analysis_method)){
+echo $analysis_method." RSS解析メソッドが定義されていません";
+}
+
 ?>
 <html lang="ja">
 <head>
@@ -27,8 +36,8 @@ $ligicObj->setAccountId($RSS_AccountID);
 <body>
 
 <?php
-$ligicObj->analysis_oretekigame();
-$ligicObj->test_outputFeed();
+$ligicObj->$analysis_method();
+//$ligicObj->test_outputFeed();
 ?>
 </body>
 </html>

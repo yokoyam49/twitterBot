@@ -84,6 +84,9 @@ class RSS_Data_Container
             $set_vals[] = $value;
         }
 
+        $mes = "取得記事： ".$this->data['title']." date： ".$this->data['date']."\n";
+        error_log($mes, 3, _RSS_LOG_PATH.'rss_log_'.date("Y_m_d").".log");
+
         $sql = "INSERT INTO rss_feed_date (".implode(", ", $set_cols).", create_date) VALUES (".implode(", ", $pos).", now())";
         $in_count = $this->DBobj->execute($sql, $set_vals);
         if($in_count){
