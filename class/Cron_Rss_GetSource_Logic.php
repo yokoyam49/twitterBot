@@ -1,6 +1,7 @@
 <?php
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 require_once(_TWITTER_CLASS_PATH."RSS_Data_Container.php");
+require_once(_TWITTER_CLASS_PATH."Image.php");
 require_once(_RSS_FEED_PATH."Feed.php");
 
 class Cron_Rss_GetSource_Logic
@@ -81,7 +82,8 @@ class Cron_Rss_GetSource_Logic
         // }
     }
 
-    private function makeImage($image_url)
+    //画像をリサイズして_IMAGE_PATH以下に保存
+    private function makeImage($image_url, $image_date)
     {
         $make_image_size = array();
         $make_image_size[] = array(
@@ -92,21 +94,32 @@ class Cron_Rss_GetSource_Logic
                                     "width" => 300,
                                     "hight" => 300
                                     );
+        $image_file_urls = array();
         // 拡張子を取得
         $path_parts = pathinfo($image_url);
         $image_extension = $path_parts['extension'];
 
         $image_path = _IMAGE_PATH.$this->RSS_AccountInfo->name;
+
         if(!file_exists($image_path)){
             mkdir($image_path, 0777);
         }
-        foreach($make_image_size as $image_size){
-            $image_path .= "/".$this->RSS_AccountInfo->name."_".date("ymd_His")."_".$image_size['width']."x".$image_size['hight'].".".$image_extension;
-            $imageObj = new Image($image_url);
-            $imageObj->resizeImage($image_size['width'], $image_size['hight'])
-                     ->output_ImageResource($image_path);
-        }
 
+        $imageObj = new Image();
+        if(!$imageObj->setImage($image_url)){
+            //画像取得失敗
+            return array();
+        }
+        foreach($make_image_size as $image_size){
+            $image_file_name = $this->RSS_AccountInfo->name."_".date("ymd_His", strtotime($image_date))."_".$image_size['width']."x".$image_size['hight'].".".$image_extension;
+            $output_image_path = $image_path."/".$image_file_name;
+            $ret = $imageObj->resizeImage($image_size['width'], $image_size['hight'])
+                     ->output_ImageResource($output_image_path);
+            if($ret){
+                $image_file_urls[] = _IMAGE_URL.$this->RSS_AccountInfo->name."/".$image_file_name;
+            }
+        }
+        return $image_file_urls;
     }
 
     public function analysis_oretekigame()
@@ -120,10 +133,21 @@ class Cron_Rss_GetSource_Logic
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
             $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
-            if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
 
+            if(!$RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //画像取得
+echo 'hoge';
+                if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
+                    $image_file_urls = $this->makeImage($m[1], $RSS_cont_obj->date);
+                    if(count($image_file_urls)){
+                        $RSS_cont_obj->image_url = $image_file_urls[0];
+                    }
+                }
+                //DBセット
+                //$RSS_cont_obj->setDB();
             }
-            $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+
             unset($RSS_cont_obj);
         }
     }
@@ -134,11 +158,17 @@ class Cron_Rss_GetSource_Logic
         foreach($this->Source->item as $feed_data){
             $RSS_cont_obj = new RSS_Data_Container();
             $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
-            $RSS_cont_obj->date = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
             $RSS_cont_obj->title = (string)$feed_data->title;
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->content = (string)$feed_data->description;
-            $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+
+            if(!$RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //DBセット
+                //$RSS_cont_obj->setDB();
+            }
+
             unset($RSS_cont_obj);
         }
     }

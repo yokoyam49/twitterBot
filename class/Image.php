@@ -1,6 +1,12 @@
 <?php
+/***************************
+画像リサイズクラス
 
-
+$imageObj = new Image();
+$imageObj->setImage(元画像URL);
+$imageObj->resizeImage(200, 200)
+         ->output_ImageResource(保存先[省略でその場で出力]);
+***************************/
 class Image
 {
 
@@ -9,9 +15,23 @@ class Image
     private $ImageResource = null;
     private $OutImageResource = null;
 
-    public function __construct($file_path)
+    public function __construct()
+    {
+
+    }
+
+    public function setImage($file_path)
     {
         $this->File_Path = $file_path;
+        $this->Extension = null;
+        $this->ImageResource = null;
+        $this->OutImageResource = null;
+
+        if(!$this->set_ImageResource()){
+            return false;
+        }else{
+            return true;
+        }
     }
 
     private function set_ImageResource()
@@ -36,6 +56,7 @@ class Image
                 break;
         }
         if(!$image_resource){
+            $this->ImageResource = null;
             return false;
         }else{
             $this->ImageResource = $image_resource;
@@ -49,26 +70,40 @@ class Image
             return false;
         }
 
-        switch($this->Extension) {
+        if(!is_null($output_file_path)){
+            //出力予定ファイル名より拡張子を取得
+            $path_parts = pathinfo($this->File_Path);
+            $extension = $path_parts['extension'];
+        }else{
+            //元画像ファイルと同じ拡張子を使用
+            $extension = $this->Extension;
+        }
+
+        if(!$extension){
+            $extension = 'jpg';
+        }
+
+        switch($extension) {
             case 'jpg':
             case 'jpeg':
-                imagejpeg($this->OutImageResource, $output_file_path);
+                $ret = imagejpeg($this->OutImageResource, $output_file_path);
                 break;
 
             case 'png':
-                imagepng($this->OutImageResource, $output_file_path);
+                $ret = imagepng($this->OutImageResource, $output_file_path);
                 break;
 
             case 'gif':
-                imagegif($this->OutImageResource, $output_file_path);
+                $ret = imagegif($this->OutImageResource, $output_file_path);
                 break;
         }
+        return $ret;
     }
 
     public function resizeImage($width, $hight)
     {
 
-        if(!$this->set_ImageResource()){
+        if(!$this->ImageResource){
             $this->OutImageResource = null;
             return $this;
         }

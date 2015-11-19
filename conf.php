@@ -22,8 +22,12 @@ define('_DOCUMENT_PATH', _SYSTEM_ROOT.'public_html/');
 //log
 define('_TWITTER_LOG_PATH', _SYSTEM_ROOT.'log/');
 
-//画像パス
+//画像システムパス
 define('_IMAGE_PATH', '/home/ainyan/blog.graph.jp/public_html/img/');
+//画像URL
+define('_IMAGE_URL', 'http://blog.graph.jp/img/');
+//RSSlog
+define('_RSS_LOG_PATH', _SYSTEM_ROOT.'log/');
 
 //require
 //require_once(_TWITTER_OAUTH_PATH."src/TwitterOAuth.php");

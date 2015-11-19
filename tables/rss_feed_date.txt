@@ -8,6 +8,7 @@ title		TEXT		タイトル
 content		TEXT		内容
 html_content	TEXT		内容(HTML)
 link_url	VARCHAR(255)	リンクURL
+image_url	VARCHAR(255)	画像URL
 subject		TEXT		種別
 memo1		TEXT		予備フィールド
 memo2		TEXT
