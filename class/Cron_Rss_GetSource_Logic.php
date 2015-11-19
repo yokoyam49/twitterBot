@@ -133,6 +133,7 @@ class Cron_Rss_GetSource_Logic
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
             $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
+            $RSS_cont_obj->del_flg = 0;
 
             if($RSS_cont_obj->checkDB_RssData()){
                 //既に保存済みの記事でないとき
@@ -161,6 +162,7 @@ class Cron_Rss_GetSource_Logic
             $RSS_cont_obj->title = (string)$feed_data->title;
             $RSS_cont_obj->link_url = (string)$feed_data->link;
             $RSS_cont_obj->content = (string)$feed_data->description;
+            $RSS_cont_obj->del_flg = 0;
 
             if($RSS_cont_obj->checkDB_RssData()){
                 //既に保存済みの記事でないとき

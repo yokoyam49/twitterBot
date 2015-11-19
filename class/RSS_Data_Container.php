@@ -21,7 +21,8 @@ class RSS_Data_Container
             'memo7' => 'STR',
             'memo8' => 'STR',
             'memo9' => 'STR',
-            'memo10' => 'STR'
+            'memo10' => 'STR',
+            'del_flg' => 'INT'
         );
     private $data = array();
 

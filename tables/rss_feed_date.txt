@@ -20,5 +20,6 @@ memo7		TEXT
 memo8		TEXT
 memo9		TEXT
 memo10		TEXT
+del_flg		tinyint(1)	íœƒtƒ‰ƒO
 create_date	TIMESTAMP
 update_date	TIMESTAMP
