@@ -1,0 +1,7 @@
+Erss_site_usefeed(‰¼)
+
+id
+site_id
+site_name #JOIN‚µ‚È‚­‚Ä‚æ‚¢‚æ‚¤‚É
+site_url
+use_feed_id

@@ -30,7 +30,7 @@ class Cron_Rss_GetSource_Logic
     public function __construct()
     {
         $this->DBobj = new DB_Base();
-        $this->logFile = 'log_'.date("Y_m_d").".log";
+        $this->logFile = 'rss_log_'.date("Y_m_d").".log";
     }
 
     public function setDebug()
@@ -89,10 +89,6 @@ class Cron_Rss_GetSource_Logic
         $make_image_size[] = array(
                                     "width" => 200,
                                     "hight" => 200
-                                    );
-        $make_image_size[] = array(
-                                    "width" => 300,
-                                    "hight" => 300
                                     );
         $image_file_urls = array();
         // 拡張子を取得
