@@ -37,6 +37,7 @@ echo $analysis_method." RSS解析メソッドが定義されていません";
 
 <?php
 $ligicObj->$analysis_method();
+var_dump($ligicObj->RSS_Cont_Arr);
 //$ligicObj->test_outputFeed();
 ?>
 </body>

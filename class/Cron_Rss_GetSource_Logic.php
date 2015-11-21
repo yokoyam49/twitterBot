@@ -18,7 +18,7 @@ class Cron_Rss_GetSource_Logic
     //RSS
     private $Source = null;
     //RSSコンテナ配列
-    private $RSS_Cont_Arr = array();
+    public $RSS_Cont_Arr = array();
     //DBオブジェクト
     private $DBobj;
     //ログ
@@ -87,8 +87,8 @@ class Cron_Rss_GetSource_Logic
     {
         $make_image_size = array();
         $make_image_size[] = array(
-                                    "width" => 200,
-                                    "hight" => 200
+                                    "width" => 100,
+                                    "hight" => 100
                                     );
         $image_file_urls = array();
         // 拡張子を取得
@@ -118,6 +118,10 @@ class Cron_Rss_GetSource_Logic
         return $image_file_urls;
     }
 
+//---------------------------------------------------------------------------------
+//   RSS解析メソッド
+//---------------------------------------------------------------------------------
+    //オレ的
     public function analysis_oretekigame()
     {
         $this->RSS_Cont_Arr = array();
@@ -156,7 +160,8 @@ class Cron_Rss_GetSource_Logic
         error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
     }
 
-    public function analysis_4games_topics()
+    //4game
+    public function analysis_4games()
     {
         $this->RSS_Cont_Arr = array();
         $get_count = 0;
@@ -186,47 +191,189 @@ class Cron_Rss_GetSource_Logic
         error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
     }
 
-
+    //電撃ONLINE
     public function analysis_dengekionline()
     {
-var_dump($this->Source);
-        // $this->RSS_Cont_Arr = array();
-        // $get_count = 0;
-        // foreach($this->Source->item as $feed_data){
-        //     $RSS_cont_obj = new RSS_Data_Container();
-        //     $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
-        //     $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
-        //     $RSS_cont_obj->title = (string)$feed_data->title;
-        //     $RSS_cont_obj->link_url = (string)$feed_data->link;
-        //     $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
-        //     $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
-        //     $RSS_cont_obj->del_flg = 0;
+        $this->RSS_Cont_Arr = array();
+        $get_count = 0;
+        foreach($this->Source->channel->item as $feed_data){
+            $RSS_cont_obj = new RSS_Data_Container();
+            $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->pubDate));
+            $RSS_cont_obj->title = (string)$feed_data->title;
+            $RSS_cont_obj->link_url = (string)$feed_data->link;
+            $RSS_cont_obj->html_content = (string)$feed_data->description;
+            $RSS_cont_obj->del_flg = 0;
 
-        //     if($RSS_cont_obj->checkDB_RssData()){
-        //         //既に保存済みの記事でないとき
-        //         //画像取得
-        //         if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
-        //             $image_file_urls = $this->makeImage($m[1], $RSS_cont_obj->date);
-        //             if(count($image_file_urls)){
-        //                 $RSS_cont_obj->image_url = $image_file_urls[0];
-        //             }
-        //         }
-        //         //DBセット
-        //         $RSS_cont_obj->setDB();
+            if($RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //画像取得
+                if(strlen((string)$feed_data->enclosure)){
+                    $image_file_urls = $this->makeImage((string)$feed_data->enclosure, $RSS_cont_obj->date);
+                    if(count($image_file_urls)){
+                        $RSS_cont_obj->image_url = $image_file_urls[0];
+                    }
+                }
+                //DBセット
+                $RSS_cont_obj->setDB();
 
-        //         $get_count++;
-        //     }
-        //     //デバッグ用
-        //     if($this->debug_flg){
-        //         $this->RSS_Cont_Arr[] = $RSS_cont_obj;
-        //     }
-        //     unset($RSS_cont_obj);
-        // }
-        // $mes = "取得件数 ".$get_count."件\n";
-        // error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+                $get_count++;
+            }
+
+            //デバッグ用
+            if($this->debug_flg){
+                $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+            }
+            unset($RSS_cont_obj);
+        }
+        $mes = "取得件数 ".$get_count."件\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
     }
 
+    //ファミ通
+    public function analysis_famitsu()
+    {
+        $this->RSS_Cont_Arr = array();
+        $get_count = 0;
+        foreach($this->Source->channel->item as $feed_data){
+            $RSS_cont_obj = new RSS_Data_Container();
+            $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->pubDate));
+            $RSS_cont_obj->title = (string)$feed_data->title;
+            $RSS_cont_obj->link_url = (string)$feed_data->link;
+            $RSS_cont_obj->content = (string)$feed_data->description;
+            $RSS_cont_obj->del_flg = 0;
 
+            if($RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //DBセット
+                $RSS_cont_obj->setDB();
+
+                $get_count++;
+            }
+
+            //デバッグ用
+            if($this->debug_flg){
+                $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+            }
+            unset($RSS_cont_obj);
+        }
+        $mes = "取得件数 ".$get_count."件\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+    }
+
+    //
+    public function analysis_ff14eotan()
+    {
+        $this->RSS_Cont_Arr = array();
+        $get_count = 0;
+        foreach($this->Source->item as $feed_data){
+            $RSS_cont_obj = new RSS_Data_Container();
+            $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
+            $RSS_cont_obj->title = (string)$feed_data->title;
+            $RSS_cont_obj->link_url = (string)$feed_data->link;
+            $RSS_cont_obj->content = (string)$feed_data->description;
+            $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
+            $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
+            $RSS_cont_obj->del_flg = 0;
+
+            if($RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //DBセット
+                $RSS_cont_obj->setDB();
+
+                $get_count++;
+            }
+            //デバッグ用
+            if($this->debug_flg){
+                $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+            }
+            unset($RSS_cont_obj);
+        }
+        $mes = "取得件数 ".$get_count."件\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+    }
+
+    //ff14じゅうよんつうしん
+    public function analysis_ff14tusin()
+    {
+        $this->RSS_Cont_Arr = array();
+        $get_count = 0;
+        foreach($this->Source->item as $feed_data){
+            $RSS_cont_obj = new RSS_Data_Container();
+            $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
+            $RSS_cont_obj->title = (string)$feed_data->title;
+            $RSS_cont_obj->link_url = (string)$feed_data->link;
+            $RSS_cont_obj->content = (string)$feed_data->description;
+            $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
+            $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
+            $RSS_cont_obj->del_flg = 0;
+
+            if($RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //画像取得
+                if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
+                    $image_file_urls = $this->makeImage($m[1], $RSS_cont_obj->date);
+                    if(count($image_file_urls)){
+                        $RSS_cont_obj->image_url = $image_file_urls[0];
+                    }
+                }
+                //DBセット
+                $RSS_cont_obj->setDB();
+
+                $get_count++;
+            }
+            //デバッグ用
+            if($this->debug_flg){
+                $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+            }
+            unset($RSS_cont_obj);
+        }
+        $mes = "取得件数 ".$get_count."件\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+    }
+
+    //馬鳥速報
+    public function analysis_ff14umadori()
+    {
+        $this->RSS_Cont_Arr = array();
+        $get_count = 0;
+        foreach($this->Source->item as $feed_data){
+            $RSS_cont_obj = new RSS_Data_Container();
+            $RSS_cont_obj->rss_account_id = $this->RSS_Account_ID;
+            $RSS_cont_obj->date = date("Y-m-d H:i:s", strtotime((string)$feed_data->children('http://purl.org/dc/elements/1.1/')->date));
+            $RSS_cont_obj->title = (string)$feed_data->title;
+            $RSS_cont_obj->link_url = (string)$feed_data->link;
+            $RSS_cont_obj->content = (string)$feed_data->description;
+            $RSS_cont_obj->html_content = (string)$feed_data->children('http://purl.org/rss/1.0/modules/content/')->encoded;
+            $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
+            $RSS_cont_obj->del_flg = 0;
+
+            if($RSS_cont_obj->checkDB_RssData()){
+                //既に保存済みの記事でないとき
+                //画像取得
+                if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
+                    $image_file_urls = $this->makeImage($m[1], $RSS_cont_obj->date);
+                    if(count($image_file_urls)){
+                        $RSS_cont_obj->image_url = $image_file_urls[0];
+                    }
+                }
+                //DBセット
+                $RSS_cont_obj->setDB();
+
+                $get_count++;
+            }
+            //デバッグ用
+            if($this->debug_flg){
+                $this->RSS_Cont_Arr[] = $RSS_cont_obj;
+            }
+            unset($RSS_cont_obj);
+        }
+        $mes = "取得件数 ".$get_count."件\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+    }
 
 }
 
