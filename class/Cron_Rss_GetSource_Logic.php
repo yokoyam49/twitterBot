@@ -1,5 +1,4 @@
 <?php
-require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 require_once(_TWITTER_CLASS_PATH."RSS_Data_Container.php");
 require_once(_TWITTER_CLASS_PATH."Image.php");
 //require_once(_RSS_FEED_PATH."Feed.php");

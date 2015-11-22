@@ -1,0 +1,11 @@
+・rss_site_attribute
+サイト属性
+それぞれのサイトがどの属性を持っているか
+
+id			INT,key,auto_increment
+site_id			INT			サイトID
+attribute_id		INT			属性ID
+del_flg
+create_date
+update_date
+

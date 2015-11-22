@@ -1,0 +1,12 @@
+・rss_attribute_info
+属性情報
+
+id			INT,key,auto_increment
+attribute_name		VARCHAR(255)	属性名
+attribute_name_mb	TEXT		属性名マルチバイト
+search_word		TEXT		検索文字列
+rank			INT		属性ランク　小さいほど先に実行される
+del_flg
+create_date
+update_date
+

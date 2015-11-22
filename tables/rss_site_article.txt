@@ -1,0 +1,11 @@
+・rss_site_article
+サイト記事情報
+
+id			INT,key,auto_increment
+site_id			INT		サイトID
+feed_id			INT		記事ID
+attribute_id		INT		属性ID
+#link_url		VARCHAR(255)	リンクURL
+del_flg
+create_date
+update_date

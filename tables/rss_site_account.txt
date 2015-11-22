@@ -1,0 +1,13 @@
+・rss_site_account
+サイト情報
+
+id
+site_name
+site_name_mb
+site_dmain
+site_url
+site_rank
+notice
+use_flg
+create_date
+update_date
