@@ -6,12 +6,15 @@ class Cron_Article_MakeArticle_ArticleSearch
     private $Attribute_Id;
     private $Attribute_info;
     private $Search_word_arr = array();
+    private $Search_hash_arr = array();
 
     //設定
     const SEARCH_PASTDAY = 86400;//一日のタイムスタンプ 一日以内の記事の中から検索
 
     //結果記事
     private $Res_Feeds = array();
+
+    private $DBobj;
 
     public function __construct()
     {
@@ -23,11 +26,26 @@ class Cron_Article_MakeArticle_ArticleSearch
     {
         $this->Res_Feeds = array();
         $this->Attribute_Id = $attribute_id;
-        $this->Attribute_info = getAttributeInfo($attribute_id);
-        $this->Search_word_arr = explode(" ", $this->Attribute_info->search_word);
-        if(!is_array($this->Search_word_arr) or !count($this->Search_word_arr)){
+        $this->Attribute_info = $this->getAttributeInfo($attribute_id);
+        $this->separat_search_hash();
+        if((!is_array($this->Search_word_arr) or !count($this->Search_word_arr)) and (!is_array($this->Search_hash_arr) or !count($this->Search_hash_arr))){
             $msg = 'rss_attribute_info: 検索文字列の形式が不正、もしくは空です';
             throw new Exception($msg);
+        }
+    }
+
+    //検索文言をハッシュタグと一般検索文字列とに分離
+    private function separat_search_hash()
+    {
+        $this->Search_word_arr = array();
+        $this->Search_hash_arr = array();
+        $word_arr = explode(" ", $this->Attribute_info->search_word);
+        foreach($word_arr as $word){
+            if(preg_match('/^#.+$/', $word)){
+                $this->Search_hash_arr[] = $word;
+            }else{
+                $this->Search_word_arr[] = $word;
+            }
         }
     }
 
@@ -60,21 +78,17 @@ class Cron_Article_MakeArticle_ArticleSearch
     private function search_SameHashTag_Account()
     {
         $past_time = date("Y-m-d H:i:s", time() - self::SEARCH_PASTDAY);
-        //属性検索文字列からハッシュタグ抽出
-        $hash_arr = array();
-        foreach($this->Search_word_arr as $search_word){
-            if(preg_match('/^#.+$/', $search_word)){
-                $hash_arr[] = $search_word;
-            }
-        }
-        if(!count($hash_arr)){
+
+        if(!count($this->Search_hash_arr)){
             return ;
         }
+        $hash_arr = $this->Search_hash_arr;
 
         //該当記事検索
         $where_hash_str = array();
-        foreach($hash_arr as $hash){
+        foreach($hash_arr as &$hash){
             $where_hash_str[] = "fa.search_hash like ?";
+            $hash = '%'.$hash.'%';
         }
         $sql = "SELECT fd.id AS id
                 FROM rss_feed_date AS fd
@@ -83,7 +97,7 @@ class Cron_Article_MakeArticle_ArticleSearch
                     AND (".implode(" OR ", $where_hash_str).")
                     AND fd.date > '".$past_time."'
                 ORDER BY fd.date DESC";
-        $res = $this->DBobj->query($sql, array($hash_arr));
+        $res = $this->DBobj->query($sql, $hash_arr);
         if(!$res){
             return;
         }
@@ -105,7 +119,7 @@ class Cron_Article_MakeArticle_ArticleSearch
                         AND (title LIKE ?
                             OR content LIKE ?
                             OR html_content LIKE ?)
-                        AND fd.date > '".$past_time."'
+                        AND date > '".$past_time."'
                     ORDER BY date DESC";
             $search_str = '%'.$search_word.'%';
             $res = $this->DBobj->query($sql, array($search_str, $search_str, $search_str));
@@ -113,9 +127,9 @@ class Cron_Article_MakeArticle_ArticleSearch
                 continue;
             }
             //抽出feedIDセット
-        foreach($res as $rec){
-            $this->Res_Feeds[] = $rec->id;
-        }
+            foreach($res as $rec){
+                $this->Res_Feeds[] = $rec->id;
+            }
         }
     }
 

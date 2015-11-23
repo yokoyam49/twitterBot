@@ -8,11 +8,14 @@ class Cron_Article_MakeArticle
 
     //サーチオブジェクト
     private $ArticleSearchObj;
+    //DBオブジェクト
+    private $DBobj;
 
     public function __construct()
     {
-        $this->getAttributes();
+        $this->DBobj = new DB_Base();
         $this->ArticleSearchObj = new Cron_Article_MakeArticle_ArticleSearch();
+        $this->getAttributes();
         $this->logFile = 'article_log_'.date("Y_m_d").".log";
     }
 
@@ -34,6 +37,7 @@ class Cron_Article_MakeArticle
                     //属性に一致する記事を抽出
                     $this->ArticleSearchObj->setAttributeId($attribute->id);
                     $feed_ids = $this->ArticleSearchObj->ArticleSearch();
+
                     //記事生成
                     $this->make_Article($attribute->id, $feed_ids);
 
@@ -68,6 +72,7 @@ class Cron_Article_MakeArticle
                 continue;
             }
             //rss_site_articleへ記事生成
+            $article_count = 0;
             foreach($res as $rec){
                 $site_article_fields = array(
                         'site_id' => $rec->site_id,
@@ -82,7 +87,10 @@ class Cron_Article_MakeArticle
 
                 $mes = "記事生成 site_id:".$rec->site_id." feed_id:".$feed_id."\n";
                 error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+                $article_count++;
             }
+            $mes = "生成件数:".$article_count."\n";
+            error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
         }
     }
 
