@@ -60,7 +60,7 @@ class Cron_Article_MakeArticle
             //site_id取得
             $sql = "SELECT sa.site_id AS site_id
                     FROM rss_site_attribute AS sa
-                    WHERE attribute_id = ?
+                    WHERE sa.attribute_id = ?
                         AND NOT EXISTS (
                             SELECT site_id
                             FROM rss_site_article
