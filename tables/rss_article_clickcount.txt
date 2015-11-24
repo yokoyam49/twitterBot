@@ -1,0 +1,13 @@
+・rss_article_clickcount
+記事のアクセス数
+
+id
+article_id
+click_count
+pc_click_count
+smp_click_count
+
+
+ajaxでアクセスしてアクセス数をカウントする予定
+ajaxファイルだけbasic解除 方法↓
+http://thesaibase.com/server/htaccess-basic-auth
