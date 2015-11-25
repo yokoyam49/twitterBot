@@ -19,7 +19,7 @@ class Cron_Article_MakeArticle_ArticleSearch
     public function __construct()
     {
         $this->DBobj = new DB_Base();
-        $this->logFile = 'article_log_'.date("Y_m_d").".log";
+        $this->logFile = 'rss_log_'.date("Y_m_d").".log";
     }
 
     public function setAttributeId($attribute_id)

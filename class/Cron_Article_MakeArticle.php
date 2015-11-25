@@ -16,7 +16,7 @@ class Cron_Article_MakeArticle
         $this->DBobj = new DB_Base();
         $this->ArticleSearchObj = new Cron_Article_MakeArticle_ArticleSearch();
         $this->getAttributes();
-        $this->logFile = 'article_log_'.date("Y_m_d").".log";
+        $this->logFile = 'rss_log_'.date("Y_m_d").".log";
     }
 
     //属性情報取得
