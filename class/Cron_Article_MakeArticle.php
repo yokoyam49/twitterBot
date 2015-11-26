@@ -33,6 +33,12 @@ class Cron_Article_MakeArticle
             $mes = date("Y-m-d H:i:s")." 属性:".$attribute->attribute_name." 記事生成開始\n";
             error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
 
+            if(!$this->SiteExist_Attribute($attribute->id)){
+                $mes = $attribute->attribute_name."に属するサイトがありません\n";
+                error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+                continue;
+            }
+
             try{
                     //属性に一致する記事を抽出
                     $this->ArticleSearchObj->setAttributeId($attribute->id);
@@ -92,6 +98,21 @@ class Cron_Article_MakeArticle
         }
         $mes = "生成件数:".$article_count."\n";
         error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
+    }
+
+    //指定属性に属するサイトがあるかチェック サイトがある場合：True
+    private function SiteExist_Attribute($attribute_id)
+    {
+        $sql = "SELECT site_id
+                FROM rss_site_attribute
+                WHERE attribute_id = ?
+                LIMIT 1";
+        $res = $this->DBobj->query($sql, array($attribute_id));
+        if(!$res){
+            return false;
+        }else{
+            return true;
+        }
     }
 
 }
