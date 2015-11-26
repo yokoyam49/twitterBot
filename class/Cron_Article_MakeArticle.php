@@ -56,6 +56,7 @@ class Cron_Article_MakeArticle
     private function make_Article($attribute_id, $feed_ids)
     {
         $site_ids = array();
+        $article_count = 0;
         foreach($feed_ids as $feed_id){
             //site_id取得
             $sql = "SELECT sa.site_id AS site_id
@@ -72,7 +73,6 @@ class Cron_Article_MakeArticle
                 continue;
             }
             //rss_site_articleへ記事生成
-            $article_count = 0;
             foreach($res as $rec){
                 $site_article_fields = array(
                         'site_id' => $rec->site_id,
@@ -89,9 +89,9 @@ class Cron_Article_MakeArticle
                 error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
                 $article_count++;
             }
-            $mes = "生成件数:".$article_count."\n";
-            error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
         }
+        $mes = "生成件数:".$article_count."\n";
+        error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
     }
 
 }
