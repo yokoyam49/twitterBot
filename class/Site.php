@@ -112,7 +112,7 @@ class Site
 
     //日付指定で記事を取得
     //YYYY-mm-dd
-    public function getArticle_InDay($date)
+    public function getArticle_InDay($date, $fakeUrl_flg=true)
     {
         $articles = array();
         $start = $date.' 00:00:00';
@@ -124,7 +124,7 @@ class Site
                 WHERE sa.del_flg = 0
                     AND sa.site_id = ?
                     AND fd.date BETWEEN ? AND ?
-                ORDER BY fd.date DESC LIMIT 100";
+                ORDER BY fd.date DESC";
         $feeds = $this->DBobj->query($sql, array($this->Site_Id, $start, $end));
         if(!$feeds){
             return $articles;
@@ -134,12 +134,17 @@ class Site
             $article->feed = $feed;
             $article->link = $feed->link_url;
 
-            $fake_urls = $this->getFakeLinkUrl($feed->attribute_id);
-            if($fake_urls and count($fake_urls)){
-                $article->fake_link = $fake_urls[array_rand($fake_urls)]->site_url;
+            if($fakeUrl_flg){
+                $fake_urls = $this->getFakeLinkUrl($feed->attribute_id);
+                if($fake_urls and count($fake_urls)){
+                    $article->fake_link = $fake_urls[array_rand($fake_urls)]->site_url;
+                }else{
+                    $article->fake_link = null;
+                }
             }else{
                 $article->fake_link = null;
             }
+
             $articles[] = $article;
         }
         return $articles;
@@ -155,6 +160,16 @@ class Site
                     AND sat.attribute_id = ?
                     AND sat.site_id <> ?";
         return $this->DBobj->query($sql, array($attribute_id, $this->Site_Id));
+    }
+
+    public function makeRandStr($length)
+    {
+        $str = array_merge(range('a', 'z'), range('0', '9'), range('A', 'Z'));
+        $r_str = null;
+        for ($i = 0; $i < $length; $i++) {
+            $r_str .= $str[rand(0, count($str))];
+        }
+        return $r_str;
     }
 
 

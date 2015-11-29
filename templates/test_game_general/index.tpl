@@ -19,12 +19,46 @@
       <script src="js/respond.min.js"></script>
     <![endif]-->
     <script type="text/javascript" src="js/site.min.js"></script>
+    <script type="text/javascript" src="js/jquery-1.10.1.min.js"></script>
   </head>
   <body style="background-color: #f1f2f6;">
+
+
+    <div class="docs-header">
+
+        <!--header-->
+        <div class="topic">
+            <div class="container">
+                <div class="col-md-8">
+                    <h2>ゲーム情報タイムライン</h2>
+                    <h4>ゲーム情報速報、ゲーム記事を最速速報</h4>
+                </div>
+                <div class="col-md-4">
+                    <div class="advertisement">
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
     <div class="container documents">
-    <h2 class="timeline-title">オレ的ゲーム情報タイムライン</h2>
+
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">サイドバー</h3>
+                </div>
+                <div class="panel-body">
+                    content
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
             <div class="timeline">
                 <dl>
                 {foreach from=$feeds key=date item=feed_days}
