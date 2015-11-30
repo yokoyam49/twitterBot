@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>{$site_info->site_name_mb}</title>
+    <title><!--{$site_info->site_name_mb}--></title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
     <!--<meta name="smartaddon-verification" content="936e8d43184bc47ef34e25e426c508fe" />-->
     <meta name="keywords" content="Flat UI Design, UI design, UI, user interface, web interface design, user interface design, Flat web design, Bootstrap, Bootflat, Flat UI colors, colors">
@@ -18,8 +18,57 @@
       <script src="js/html5shiv.js"></script>
       <script src="js/respond.min.js"></script>
     <![endif]-->
-    <script type="text/javascript" src="js/site.min.js"></script>
-    <script type="text/javascript" src="js/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="bootflat/js/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="bootflat/js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="bootflat/js/jquery.bottom-1.0.js"></script>
+    <script type="text/javascript" src="bootflat/js/site.min.js"></script>
+    <script type="text/javascript" src="bootflat/js/site.js"></script>
+
+<script type="text/javascript">
+var last_data_date = '<!--{$last_feed_time}-->';
+$(document).ready(function() {
+    // オプションのproximityの値には、bottom.jsを発生する位置を指定します。
+    //$("#timeline").bottom({proximity: 0.05});
+    $("#timeline").bind("bottom", function() {
+        var obj = $(this);
+
+        //「loading」がfalseの時に実行する
+        if (!obj.data("loading")) {
+
+            //「loading」をtrueにする
+            obj.data("loading", true);
+
+            //「Loading...」というテキストを表示
+            $('#timeline dl').append('<dd>Loading...</dd>');
+
+            feed_data = read_more_feeds('index.php', '<!--{$auth_str}-->', last_data_date);
+            //「Loading...」テキストを消す
+            $('#timeline dl dd:last').remove();
+
+            for(date in feed_data){
+                $("#timeline").append('<dt>' + date + '</dt>');
+                for(key in feed_data[date]){
+                    data = {
+                        "way" : (key % 2) == 0 ? "right" : "left",
+                        "date" : feed_data[date][key]['feed']['date'],
+                        "image" : "<img class=\"events-object img-rounded\" src=\"" + feed_data[date][key]['feed']['image_url'] + "\">",
+                        "mb_name" : feed_data[date][key]['feed']['mb_name'],
+                        "link" : feed_data[date][key]['link'],
+                        "content" : feed_data[date][key]['feed']['title']
+                    };
+                    $.tmpl( $( "#timeline_Template" ), data ).appendTo( "#timeline" );
+                    last_data_date = feed_data[date][key]['feed']['date'];
+                }
+            }
+            //処理が完了したら「Loading...」をfalseにする
+            obj.data("loading", false);
+
+        }
+    });
+    $('html,body').animate({ scrollTop: 0 }, '1');
+});
+</script>
+
   </head>
   <body style="background-color: #f1f2f6;">
 
@@ -59,40 +108,40 @@
             </div>
         </div>
         <div class="col-md-9">
-            <div class="timeline">
+            <div class="timeline" id="timeline">
                 <dl>
-                {foreach from=$feeds key=date item=feed_days}
-                    <dt>{$date}</dt>
-                    {foreach from=$feed_days key=key item=feed_data name=feed_loop}
-                    {if ($smarty.foreach.feed_loop.iteration % 2) == 1}
+                <!--{foreach from=$feeds key=date item=feed_days}-->
+                    <dt><!--{$date}--></dt>
+                    <!--{foreach from=$feed_days key=key item=feed_data name=feed_loop}-->
+                    <!--{if ($smarty.foreach.feed_loop.iteration % 2) == 1}-->
                     <dd class="pos-right clearfix">
-                    {else}
+                    <!--{else}-->
                     <dd class="pos-left clearfix">
-                    {/if}
+                    <!--{/if}-->
                         <div class="circ"></div>
-                        <div class="time">{$feed_data->feed->date|date_format:"%H:%M"}</div>
+                        <div class="time"><!--{$feed_data->feed->date|date_format:"%H:%M"}--></div>
                         <div class="events">
                             <div class="pull-left">
-                            {if $feed_data->feed->image_url}
-                                <img class="events-object img-rounded" src="{$feed_data->feed->image_url}">
-                            {/if}
+                            <!--{if $feed_data->feed->image_url}-->
+                                <img class="events-object img-rounded" src="<!--{$feed_data->feed->image_url}-->">
+                            <!--{/if}-->
                             </div>
                             <div class="events-body">
-                                <h4 class="events-heading">{$feed_data->feed->mb_name}</h4>
-                                <p><a href="{$feed_data->link}" target="_blank">{$feed_data->feed->title}</a></p>
+                                <h4 class="events-heading"><!--{$feed_data->feed->mb_name}--></h4>
+                                <p><a href="<!--{$feed_data->link}-->" target="_blank"><!--{$feed_data->feed->title}--></a></p>
                             </div>
                         </div>
                     </dd>
-                    {/foreach}
-                {/foreach}
+                    <!--{/foreach}-->
+                <!--{/foreach}-->
 
-              </dl>
-          </div>
-      </div>
+                </dl>
+            </div>
+        </div>
 
 
 
-      
+
     </div>
     </div>
 
