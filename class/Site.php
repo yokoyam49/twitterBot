@@ -150,6 +150,46 @@ class Site
         return $articles;
     }
 
+    //件数縛り取得 指定時間から指定件数取得
+    public function getArticle_InCount($limit_count = 100, $date = null, $fakeUrl_flg = true)
+    {
+        $articles = array();
+        if(is_null($date)){
+            $date = date("Y-m-d 23:59:59");
+        }
+        $sql = "SELECT sa.attribute_id, fa.*, fd.*
+                FROM rss_site_article AS sa
+                LEFT JOIN rss_feed_date AS fd ON sa.feed_id = fd.id
+                LEFT JOIN rss_feed_account AS fa ON fd.rss_account_id = fa.id
+                WHERE sa.del_flg = 0
+                    AND sa.site_id = ?
+                    AND fd.date < ?
+                ORDER BY fd.date DESC LIMIT ?";
+        $feeds = $this->DBobj->query($sql, array($this->Site_Id, $date, $limit_count));
+        if(!$feeds){
+            return $articles;
+        }
+        foreach($feeds as $feed){
+            $article = new stdClass();
+            $article->feed = $feed;
+            $article->link = $feed->link_url;
+
+            if($fakeUrl_flg){
+                $fake_urls = $this->getFakeLinkUrl($feed->attribute_id);
+                if($fake_urls and count($fake_urls)){
+                    $article->fake_link = $fake_urls[array_rand($fake_urls)]->site_url;
+                }else{
+                    $article->fake_link = null;
+                }
+            }else{
+                $article->fake_link = null;
+            }
+
+            $articles[] = $article;
+        }
+        return $articles;
+    }
+
     private function getFakeLinkUrl($attribute_id)
     {
         $sql = "SELECT sac.site_url
