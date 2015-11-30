@@ -96,5 +96,21 @@
     </div>
     </div>
 
+<script id="timeline_Template" type="text/x-jquery-tmpl">
+    <dd class="pos-${way} clearfix">
+        <div class="circ"></div>
+        <div class="time">${date}</div>
+        <div class="events">
+            <div class="pull-left">
+                ${image}
+            </div>
+            <div class="events-body">
+                <h4 class="events-heading">${mb_name}</h4>
+                <p><a href="${link}" target="_blank">${content}</a></p>
+            </div>
+        </div>
+    </dd>
+</script>
+
   </body>
 </html>
