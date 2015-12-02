@@ -23,76 +23,25 @@
     <script type="text/javascript" src="bootflat/js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" src="bootflat/js/jquery.bottom-1.0.js"></script>
 <script type="text/javascript">
-var last_data_date = '<!--{$last_feed_time}-->';
-
-/*
-function next_feeds()
-{
-    var feed_data = read_more_feeds('index.php', '<!--{$auth_str}-->', last_data_date);
-    //read_more_feeds('index.php', '<!--{$auth_str}-->', last_data_date).done(function(feed_data){
-        for(date in feed_data){
-            $("#timeline").append('<dt>' + date + '</dt>');
-            for(key in feed_data[date]){
-                data = {
-                    "way" : (key % 2) == 0 ? "right" : "left",
-                    "date" : feed_data[date][key]['feed']['date'],
-                    "image" : "<img class=\"events-object img-rounded\" src=\"" + feed_data[date][key]['feed']['image_url'] + "\">",
-                    "mb_name" : feed_data[date][key]['feed']['mb_name'],
-                    "link" : feed_data[date][key]['link'],
-                    "content" : feed_data[date][key]['feed']['title']
-                };
-                $.tmpl( $( "#timeline_Template" ), data ).appendTo( "#timeline" );
-                last_data_date = feed_data[date][key]['feed']['date'];
-            }
-        }
-    //});
-
-}
-*/
-
-/*
-$(document).ready(function() {
-    // オプションのproximityの値には、bottom.jsを発生する位置を指定します。
-    //$("#timeline").bottom({proximity: 0.05});
-    $("#timeline").bind("bottom", function() {
-        var obj = $(this);
-
-        //「loading」がfalseの時に実行する
-        if (!obj.data("loading")) {
-
-            //「loading」をtrueにする
-            obj.data("loading", true);
-
-            //「Loading...」というテキストを表示
-            $('#timeline dl').append('<dd>Loading...</dd>');
-
-            feed_data = read_more_feeds('index.php', '<!--{$auth_str}-->', last_data_date);
-            //「Loading...」テキストを消す
-            $('#timeline dl dd:last').remove();
-
-            for(date in feed_data){
-                $("#timeline").append('<dt>' + date + '</dt>');
-                for(key in feed_data[date]){
-                    data = {
-                        "way" : (key % 2) == 0 ? "right" : "left",
-                        "date" : feed_data[date][key]['feed']['date'],
-                        "image" : "<img class=\"events-object img-rounded\" src=\"" + feed_data[date][key]['feed']['image_url'] + "\">",
-                        "mb_name" : feed_data[date][key]['feed']['mb_name'],
-                        "link" : feed_data[date][key]['link'],
-                        "content" : feed_data[date][key]['feed']['title']
-                    };
-                    $.tmpl( $( "#timeline_Template" ), data ).appendTo( "#timeline" );
-                    last_data_date = feed_data[date][key]['feed']['date'];
-                }
-            }
-            //処理が完了したら「Loading...」をfalseにする
-            obj.data("loading", false);
-
-        }
-    });
+$(function() {
     $('html,body').animate({ scrollTop: 0 }, '1');
 });
-*/
+
+var last_data_date = '<!--{$last_feed_time}-->';
+var read_more_count = 0;
+var reading_flg = false;
+$(window).on("scroll", function() {
+    if(read_more_count >= 3){
+        return false;
+    }
+    var scrollHeight = $(document).height();
+    var scrollPosition = $(window).height() + $(window).scrollTop();
+    if ((scrollHeight - scrollPosition) / scrollHeight <= 0.05 && reading_flg === false) {
+        reading_flg = true;
+        read_more_count++;
+        read_more_feeds('<!--{$auth_str}-->');
+    }
+});
 </script>
     <script type="text/javascript" src="bootflat/js/site.js"></script>
 
@@ -168,7 +117,6 @@ $(document).ready(function() {
 
         </div>
 
-        <button type="button" class="btn btn-success btn-block" onclick="read_more_feeds('<!--{$auth_str}-->');">next</button>
     </div>
 
 <script id="timeline_Template" type="text/x-jquery-tmpl">
