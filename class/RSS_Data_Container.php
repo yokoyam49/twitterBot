@@ -110,6 +110,19 @@ class RSS_Data_Container
         }
     }
 
+    //タイトルがまったく同じ記事がないかチェック
+    //保存済みではない：true   保存済み：false
+    public function checkDB_RssData_SameTitle()
+    {
+        $sql = "SELECT id FROM rss_feed_date WHERE rss_account_id = ? AND title = ?";
+        $res = $this->DBobj->query($sql, array($this->data['rss_account_id'], $this->data['title']));
+        if(!$res or !count($res)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
 }
 
 

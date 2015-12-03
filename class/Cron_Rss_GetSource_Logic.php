@@ -135,7 +135,7 @@ class Cron_Rss_GetSource_Logic
             $RSS_cont_obj->subject = (string)$feed_data->children('http://purl.org/dc/elements/1.1/')->subject;
             $RSS_cont_obj->del_flg = 0;
 
-            if($RSS_cont_obj->checkDB_RssData()){
+            if($RSS_cont_obj->checkDB_RssData() and $RSS_cont_obj->checkDB_RssData_SameTitle()){
                 //既に保存済みの記事でないとき
                 //画像取得
                 if(preg_match('/<img.*src\s*=\s*[\"|\'](.*?\.(?:jpg|jpeg|png|gif))[\"|\'].*>/i', $RSS_cont_obj->html_content, $m)){
