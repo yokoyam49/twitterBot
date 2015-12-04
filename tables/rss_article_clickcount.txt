@@ -1,11 +1,12 @@
 ・rss_article_clickcount
 記事のアクセス数
 
-id
-article_id
-click_count
-pc_click_count
-smp_click_count
+id			INT,key,auto_increment
+site_id			INT		サイトID
+feed_id			INT		記事ID
+click_count		INT		クリック数
+pc_click_count		INT		PCクリック数
+smp_click_count		INT		mobileクリック数
 
 
 ajaxでアクセスしてアクセス数をカウントする予定

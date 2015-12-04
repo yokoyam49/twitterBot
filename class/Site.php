@@ -212,6 +212,11 @@ class Site
         return $r_str;
     }
 
+    private function click_pc($feed_id)
+    {
+        
+    }
+
 
 }
 

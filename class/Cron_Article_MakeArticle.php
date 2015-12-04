@@ -80,6 +80,7 @@ class Cron_Article_MakeArticle
             }
             //rss_site_articleへ記事生成
             foreach($res as $rec){
+                //記事生成
                 $site_article_fields = array(
                         'site_id' => $rec->site_id,
                         'feed_id' => $feed_id,
@@ -94,6 +95,18 @@ class Cron_Article_MakeArticle
                 $mes = "記事生成 site_id:".$rec->site_id." feed_id:".$feed_id."\n";
                 error_log($mes, 3, _RSS_LOG_PATH.$this->logFile);
                 $article_count++;
+                //クリックカウントレコード生成
+                $article_clickcount_fields = array(
+                        'site_id' => $rec->site_id,
+                        'feed_id' => $feed_id,
+                        'click_count' => 0,
+                        'pc_click_count' => 0,
+                        'smp_click_count' => 0
+                    );
+                $sql = "INSERT INTO rss_article_clickcount
+                        (".implode(", ", array_keys($article_clickcount_fields)).")
+                        VALUES (".implode(", ", array_fill(0, count($article_clickcount_fields), '?')).")";
+                $in_count = $this->DBobj->execute($sql, $article_clickcount_fields);
             }
         }
         $mes = "生成件数:".$article_count."\n";
