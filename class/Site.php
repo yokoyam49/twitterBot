@@ -217,6 +217,38 @@ class Site
         
     }
 
+    public function checkDevice($ua)
+    {
+        $device = '';
+        if(strpos($ua,'iphone') !== false){
+            $device = 'mobile';
+        }elseif(strpos($ua,'ipod') !== false){
+            $device = 'mobile';
+        }elseif((strpos($ua,'android') !== false) and (strpos($ua, 'mobile') !== false)){
+            $device = 'mobile';
+        }elseif((strpos($ua,'windows') !== false) and (strpos($ua, 'phone') !== false)){
+            $device = 'mobile';
+        }elseif((strpos($ua,'firefox') !== false) and (strpos($ua, 'mobile') !== false)){
+            $device = 'mobile';
+        }elseif(strpos($ua,'blackberry') !== false){
+            $device = 'mobile';
+        }elseif(strpos($ua,'ipad') !== false){
+            $device = 'tablet';
+        }elseif(strpos($ua,'windows') !== false and strpos($ua, 'touch') !== false and strpos($ua, 'tablet pc') == false){
+            $device = 'tablet';
+        }elseif(strpos($ua,'android') !== false and strpos($ua, 'mobile') === false){
+            $device = 'tablet';
+        }elseif((strpos($ua,'firefox') !== false) and (strpos($ua, 'tablet') !== false)){
+            $device = 'tablet';
+        }elseif((strpos($ua,'kindle') !== false) or (strpos($ua, 'silk') !== false)){
+            $device = 'tablet';
+        }elseif(strpos($ua,'playbook') !== false){
+            $device = 'tablet';
+        }else{
+            $device = 'others';
+        }
+        return $device;
+    }
 
 }
 
