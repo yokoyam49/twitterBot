@@ -99,6 +99,7 @@ class Cron_Article_MakeArticle
                 $article_clickcount_fields = array(
                         'site_id' => $rec->site_id,
                         'feed_id' => $feed_id,
+                        'attribute_id' => $attribute_id,
                         'click_count' => 0,
                         'pc_click_count' => 0,
                         'smp_click_count' => 0

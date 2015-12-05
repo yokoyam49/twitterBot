@@ -157,7 +157,7 @@ class Site
         if(is_null($date)){
             $date = date("Y-m-d 23:59:59");
         }
-        $sql = "SELECT sa.attribute_id, fa.*, fd.*
+        $sql = "SELECT sa.attribute_id, fa.*, fd.*, fd.id AS feed_id
                 FROM rss_site_article AS sa
                 LEFT JOIN rss_feed_date AS fd ON sa.feed_id = fd.id
                 LEFT JOIN rss_feed_account AS fa ON fd.rss_account_id = fa.id
@@ -212,9 +212,50 @@ class Site
         return $r_str;
     }
 
-    private function click_pc($feed_id)
+    //クリックカウントインクリメント
+    public function feed_clickcount($feed_id, $ua=null)
     {
-        
+        //IP重複チェック
+        if(!$this->checkClickUnique($feed_id)){
+            return;
+        }
+
+        $device_sql = '';
+        if(!is_null($ua)){
+            $device = $this->checkDevice($ua);
+            if($device === 'tablet' or $device === 'others'){
+                $device_sql = ', pc_click_count = pc_click_count + 1';
+            }elseif($device === 'mobile'){
+                $device_sql = ', smp_click_count = smp_click_count + 1';
+            }
+        }
+        $sql = 'UPDATE rss_article_clickcount SET click_count = click_count + 1'.$device_sql.' WHERE site_id = ? AND feed_id = ?';
+        $this->DBobj->execute($sql, array($this->Site_Id, $feed_id));
+        //固体識別情報取得
+        $clickcount_hosts_fields = array(
+                "site_id" => $this->Site_Id,
+                "feed_id" => $feed_id,
+                "ip_address" => $_SERVER["REMOTE_ADDR"],
+                "ua" => $ua
+            );
+        $sql = "INSERT INTO rss_clickcount_hosts
+                (".implode(", ", array_keys($clickcount_hosts_fields)).", create_date)
+                VALUES (".implode(", ", array_fill(0, count($clickcount_hosts_fields), '?')).", now())";
+        $this->DBobj->execute($sql, $clickcount_hosts_fields);
+    }
+
+    //固体識別チェック IPのみ
+    //重複がない、インクリメントしてOK->true
+    private function checkClickUnique($feed_id)
+    {
+        $since_time = date("Y-m-d H:i:s", (time() - 86400));//一日以内
+        $sql = "SELECT id FROM rss_clickcount_hosts WHERE site_id = ? AND feed_id = ? AND ip_address = ? AND create_date >= ?";
+        $res = $this->DBobj->query($sql, array($this->Site_Id, $feed_id, $_SERVER["REMOTE_ADDR"], $since_time));
+        if(!$res){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public function checkDevice($ua)

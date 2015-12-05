@@ -104,7 +104,7 @@ $(window).on("scroll", function() {
                                 </div>
                                 <div class="events-body">
                                     <h4 class="events-heading"><!--{$feed_data->feed->mb_name}--></h4>
-                                    <p><a href="<!--{$feed_data->link}-->" target="_blank"><!--{$feed_data->feed->title}--></a></p>
+                                    <p><a href="<!--{$feed_data->link}-->" target="_blank" onClick="access_feed('<!--{$auth_str}-->', '<!--{$feed_data->feed->feed_id}-->')"><!--{$feed_data->feed->title}--></a></p>
                                 </div>
                             </div>
                         </dd>
@@ -129,7 +129,7 @@ $(window).on("scroll", function() {
             </div>
             <div class="events-body">
                 <h4 class="events-heading">${mb_name}</h4>
-                <p><a href="${link}" target="_blank">${content}</a></p>
+                <p><a href="${link}" target="_blank" onClick="access_feed('<!--{$auth_str}-->', '${feed_id}')">${content}</a></p>
             </div>
         </div>
     </dd>

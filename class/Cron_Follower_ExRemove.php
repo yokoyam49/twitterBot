@@ -38,6 +38,8 @@ class Cron_Follower_ExRemove
                 $this->LogicObj->getTargetUserAndSetDB();
                 //リムーブ処理
                 $this->LogicObj->execRemove();
+                //クリックカウント用固体識別情報テーブル 古いデータ削除処理
+                $this->LogicObj->deleteClickcountHosts();
 
             }catch(Exception $e){
                 //ログ出力

@@ -164,5 +164,16 @@ class Cron_Follower_ExRemove_Logic
         }
     }
 
+    //クリックカウント用固体識別情報テーブル 古いデータ削除処理
+    public function deleteClickcountHosts()
+    {
+        $delete_since_date = date("Y-m-d H:i:s", (time() - 86400 * 3));//3日前より古いデータは削除
+        $sql = "DELETE FROM rss_clickcount_hosts WHERE create_date <= ?";
+        $delete_count = $this->DBobj->execute($sql, array($delete_since_date));
+
+        $mes = "rss_clickcount_hostsテーブル ".$delete_count."件 データ削除処理実行\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+    }
+
 }
 

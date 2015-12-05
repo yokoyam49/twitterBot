@@ -1,0 +1,10 @@
+・rss_clickcount_hosts
+クリックカウント　固体識別管理
+２～３日前のデータはextra_removeで物理削除
+
+id			INT,key,auto_increment
+site_id			INT		サイトID
+feed_id			INT		記事ID
+ip_address		VARCHAR(255)
+ua			TEXT
+create_date		
