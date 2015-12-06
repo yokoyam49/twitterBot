@@ -10,7 +10,7 @@
     <!--<link rel="shortcut icon" href="favicon_16.ico"/>-->
     <!--<link rel="bookmark" href="favicon_16.ico"/>-->
     <!-- site css -->
-    <link rel="stylesheet" href="bootflat/css/site.min.css">
+    <link rel="stylesheet" href="/bootflat/css/site.min.css">
     <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
     <!-- <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'> -->
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
@@ -18,10 +18,10 @@
       <script src="js/html5shiv.js"></script>
       <script src="js/respond.min.js"></script>
     <![endif]-->
-    <script type="text/javascript" src="bootflat/js/site.min.js"></script>
-    <script type="text/javascript" src="bootflat/js/jquery-1.10.1.min.js"></script>
-    <script type="text/javascript" src="bootflat/js/jquery.tmpl.min.js"></script>
-    <script type="text/javascript" src="bootflat/js/jquery.bottom-1.0.js"></script>
+    <script type="text/javascript" src="/bootflat/js/site.min.js"></script>
+    <script type="text/javascript" src="/bootflat/js/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="/bootflat/js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="/bootflat/js/jquery.bottom-1.0.js"></script>
 <script type="text/javascript">
 $(function() {
     $('html,body').animate({ scrollTop: 0 }, '1');
@@ -43,7 +43,7 @@ $(window).on("scroll", function() {
     }
 });
 </script>
-    <script type="text/javascript" src="bootflat/js/site.js"></script>
+    <script type="text/javascript" src="/bootflat/js/site.js"></script>
 
   </head>
   <body style="background-color: #f1f2f6;">
@@ -84,6 +84,12 @@ $(window).on("scroll", function() {
                 </div>
             </div>
             <div class="col-md-9">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-info" onClick="location.href = 'http://games.cocoon.jp/';">HOME</button>
+                  <button type="button" class="btn btn-info" onClick="location.href = 'http://games.cocoon.jp/ff14/';">FF14</button>
+                  <button type="button" class="btn btn-info" onClick="location.href = 'http://games.cocoon.jp/dq10/';">DQ10</button>
+                </div>
+
                 <div class="timeline">
                     <dl id="timeline_dl">
                     <!--{foreach from=$feeds key=date item=feed_days}-->

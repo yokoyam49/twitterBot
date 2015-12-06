@@ -171,7 +171,7 @@ class Cron_Follower_ExRemove_Logic
         $sql = "DELETE FROM rss_clickcount_hosts WHERE create_date <= ?";
         $delete_count = $this->DBobj->execute($sql, array($delete_since_date));
 
-        $mes = "rss_clickcount_hostsテーブル ".$delete_count."件 データ削除処理実行\n";
+        $mes = date("Y-m-d H:i:s")." rss_clickcount_hostsテーブル ".$delete_count ? $delete_count : '0'."件 データ削除処理実行\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
     }
 

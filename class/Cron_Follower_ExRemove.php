@@ -38,8 +38,6 @@ class Cron_Follower_ExRemove
                 $this->LogicObj->getTargetUserAndSetDB();
                 //リムーブ処理
                 $this->LogicObj->execRemove();
-                //クリックカウント用固体識別情報テーブル 古いデータ削除処理
-                $this->LogicObj->deleteClickcountHosts();
 
             }catch(Exception $e){
                 //ログ出力
@@ -53,6 +51,9 @@ class Cron_Follower_ExRemove
             error_log($mes, 3, _TWITTER_LOG_PATH.'log_'.date("Y_m_d").".log");
 
         }
+
+        //クリックカウント用固体識別情報テーブル 古いデータ削除処理
+        $this->LogicObj->deleteClickcountHosts();
     }
 
 }
