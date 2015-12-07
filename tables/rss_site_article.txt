@@ -6,6 +6,7 @@ site_id			INT		サイトID
 feed_id			INT		記事ID
 attribute_id		INT		属性ID
 tweeted_flg				TW済みフラグ
+tweet_id		VARCHAR(255)	TW済みの場合、TWID
 tweet_date		
 #link_url		VARCHAR(255)	リンクURL
 del_flg

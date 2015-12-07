@@ -52,9 +52,15 @@ class Admin_Articletweet
         $ArticleTweet_Obj->setSiteId($request->site_id);
         $ArticleTweet_Obj->setArticleId($request->article_id);
 
-        $ArticleTweet_Obj->Article_Tweet();
-
-        sleep(3);
+        //記事がツイート済みでないか
+        if($ArticleTweet_Obj->isArticleTweeted()){
+            //DBより取得
+            $ArticleTweet_Obj->setTweetedId();
+        }else{
+            //ツイート
+            $ArticleTweet_Obj->Article_Tweet();
+            sleep(3);
+        }
 
         $ArticleTweet_Obj->Article_ReTweet();
 

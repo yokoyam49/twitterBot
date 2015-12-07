@@ -72,7 +72,7 @@ class Article_Tweet
 
     private function setArticleInfo()
     {
-        $sql = "SELECT fd.*, sa.attribute_id
+        $sql = "SELECT fd.*, sa.attribute_id, sa.tweeted_flg, sa.tweet_id
                 FROM rss_site_article AS sa
                 LEFT JOIN rss_feed_date AS fd ON sa.feed_id = fd.id
                 WHERE sa.id = ?";
@@ -80,16 +80,36 @@ class Article_Tweet
         $this->Article_Info = $res[0];
     }
 
+    //記事がツイート済みか
+    public function isArticleTweeted()
+    {
+        if($this->Article_Info->tweeted_flg){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    //DBよりツイートID取得
+    public function setTweetedId()
+    {
+        $mes = 'DBよりツイートID取得 feed_id:'.$this->Article_Info->id.' site:'.$this->Site_Info->site_name.' tweet_id:'.$this->Article_Info->tweet_id."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        $this->tweet_id = $this->Article_Info->tweet_id;
+    }
+
     private function setTwObj()
     {
-        //twアカウント情報
-        $this->getTwAccountInfo();
-        $this->twObj = new TwitterOAuth(
-                                $this->Tw_Account_Info->consumer_key,
-                                $this->Tw_Account_Info->consumer_secret,
-                                $this->Tw_Account_Info->access_token,
-                                $this->Tw_Account_Info->access_token_secret
-                                );
+        if(!isset($this->twObj) or is_null($this->twObj)){
+            //twアカウント情報
+            $this->getTwAccountInfo();
+            $this->twObj = new TwitterOAuth(
+                                    $this->Tw_Account_Info->consumer_key,
+                                    $this->Tw_Account_Info->consumer_secret,
+                                    $this->Tw_Account_Info->access_token,
+                                    $this->Tw_Account_Info->access_token_secret
+                                    );
+        }
 
     }
 
@@ -120,6 +140,9 @@ class Article_Tweet
             error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         }else{
             $this->tweet_id = $api_res->id_str;
+
+            $mes = 'ツイート成功 feed_id:'.$this->Article_Info->id.' site:'.$this->Site_Info->site_name.' retweet_id:'.$apires->id_str."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         }
 
         //tw済みフラグセット
@@ -128,12 +151,15 @@ class Article_Tweet
 
     private function updateTwtedFlg()
     {
-        $sql = "UPDATE rss_site_article SET tweeted_flg = 1, tweet_date = now() WHERE id = ?";
-        $this->DBobj->execute($sql, array($this->Article_Id));
+        $sql = "UPDATE rss_site_article SET tweeted_flg = 1, tweet_id = ?, tweet_date = now() WHERE id = ?";
+        $this->DBobj->execute($sql, array($this->tweet_id, $this->Article_Id));
     }
 
     private function Media_Upload()
     {
+        //twOBJセット
+        $this->setTwObj();
+
         $media_data = file_get_contents($this->Article_Info->image_url);
         if(!$media_data){
             return false;
@@ -159,13 +185,17 @@ class Article_Tweet
                                 $account->access_token,
                                 $account->access_token_secret
                                 );
-                $retweetObj = new statuses_retweet($this->twObj);
+                $retweetObj = new statuses_retweet($twObj);
                 $apires = $retweetObj->setRetweetId($this->tweet_id)->Request();
                 $apiErrorObj = new Api_Error($apires);
                 if($apiErrorObj->error){
                     $mes = 'リツイート失敗 feed_id:'.$this->Article_Info->id.' account:'.$account->account_name.' ['.$apiErrorObj->errorMes_Str."]\n";
                     error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+                }else{
+                    $mes = 'リツイート成功 feed_id:'.$this->Article_Info->id.' account:'.$account->account_name.' retweet_id:'.$apires->id_str."\n";
+                    error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
                 }
+                unset($twObj);
             }
         }
 
