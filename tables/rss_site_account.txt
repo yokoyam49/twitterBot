@@ -8,6 +8,8 @@ site_dmain	VARCHAR(255)		ドメイン
 site_url	VARCHAR(255)		サイトURL
 site_rank	INT			サイトランク
 notice		TEXT			備考
+tweet_flg				記事をツイートアクションするか
+twitter_account_id	INT		twitterアカウントID
 use_flg
 create_date
 update_date

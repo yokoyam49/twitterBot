@@ -1,0 +1,10 @@
+・rss_account_retweet_attribute
+各TWアカウントにどの属性の記事をリツイートさせるかの設定
+
+
+id			INT,key,auto_increment
+tw_account_id		INT		TWアカウントID
+attribute_id		INT		属性ID
+use_flg
+create_date
+
