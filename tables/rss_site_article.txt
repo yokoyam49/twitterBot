@@ -5,6 +5,8 @@ id			INT,key,auto_increment
 site_id			INT		サイトID
 feed_id			INT		記事ID
 attribute_id		INT		属性ID
+tweeted_flg				TW済みフラグ
+tweet_date		
 #link_url		VARCHAR(255)	リンクURL
 del_flg
 create_date

@@ -121,6 +121,15 @@ class Article_Tweet
         }else{
             $this->tweet_id = $api_res->id_str;
         }
+
+        //tw済みフラグセット
+        $this->updateTwtedFlg();
+    }
+
+    private function updateTwtedFlg()
+    {
+        $sql = "UPDATE rss_site_article SET tweeted_flg = 1, tweet_date = now() WHERE id = ?";
+        $this->DBobj->execute($sql, array($this->Article_Id));
     }
 
     private function Media_Upload()
