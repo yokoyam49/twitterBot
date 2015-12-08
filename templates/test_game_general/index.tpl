@@ -5,8 +5,8 @@
     <title><!--{$site_info->site_name_mb}--></title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
     <!--<meta name="smartaddon-verification" content="936e8d43184bc47ef34e25e426c508fe" />-->
-    <meta name="keywords" content="Flat UI Design, UI design, UI, user interface, web interface design, user interface design, Flat web design, Bootstrap, Bootflat, Flat UI colors, colors">
-    <meta name="description" content="The complete style of the Bootflat Framework.">
+    <meta name="keywords" content="ゲーム,タイムライン,ゲーム情報,ゲーム情報タイムライン,ゲーム速報,FF14,エオルゼア,DQ10">
+    <meta name="description" content="ゲーム情報、速報、面白ネタまでタイムライン形式で見やすくお届け。暇つぶしにどうぞ。">
     <!--<link rel="shortcut icon" href="favicon_16.ico"/>-->
     <!--<link rel="bookmark" href="favicon_16.ico"/>-->
     <!-- site css -->
