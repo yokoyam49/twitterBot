@@ -1,0 +1,11 @@
+・aff_retweet_reserve
+
+
+id			INT,key,auto_increment
+tw_account_id		INT			RT先アカウント
+tweet_id		VARCHAR(255)		対象TWID
+reserve_date		TIMESTAMP		予約日時 これを過ぎたらRT
+retweeted_flg		tinyint(1)		RT済みフラグ
+del_flg			tinyint(1)		
+create_date
+update_date

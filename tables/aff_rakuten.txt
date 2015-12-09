@@ -1,0 +1,13 @@
+・aff_rakuten
+
+
+id
+rw_account_id
+serach_str
+各種検索フラグ
+･･･
+retweet_time
+
+create_date
+update_date
+
