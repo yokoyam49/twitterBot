@@ -226,8 +226,8 @@ class Cron_Tweets_Popularity_Logic
         //    return $this;
         //}
         $retweetObj = new statuses_retweet($this->twObj);
-//一時停止
-//        $apires = $retweetObj->setRetweetId($tweet->id)->Request();
+
+        $apires = $retweetObj->setRetweetId($tweet->id)->Request();
 
         //エラーチェック
         $error_msg = '';

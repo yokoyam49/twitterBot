@@ -8,6 +8,9 @@ serach_str
 еее
 retweet_time
 
+tw_account_id
+rtw_account_id
+
 create_date
 update_date
 
