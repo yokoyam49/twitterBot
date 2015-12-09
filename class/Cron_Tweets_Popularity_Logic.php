@@ -226,7 +226,8 @@ class Cron_Tweets_Popularity_Logic
         //    return $this;
         //}
         $retweetObj = new statuses_retweet($this->twObj);
-        $apires = $retweetObj->setRetweetId($tweet->id)->Request();
+//一時停止
+//        $apires = $retweetObj->setRetweetId($tweet->id)->Request();
 
         //エラーチェック
         $error_msg = '';
@@ -243,14 +244,14 @@ class Cron_Tweets_Popularity_Logic
             $MTobj->addMessage($apiErrorObj->errorMes_Str, (int)$this->Account_ID, 'error', 'RetweetsProcese');
         }else{
             //成功時ログ出力
-            $mes = "リツイート成功 RetweetID: ".$tweet->id."\n";
+            $mes = "リツイート成功 RetweetID: ".$tweet->id_str."\n";
             error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         }
         unset($apiErrorObj);
 
         //リツイートリストに追加 （エラー時でも追加される）
         $sql = "INSERT INTO dt_retweet_list ( account_id, tweet_id, search_str, tweet_text, retweet_success_flg, error_mes, retweet_count, create_date ) VALUES ( ?, ?, ?, ?, ?, ?, ?, now() )";
-        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id, $this->SerchAction->search_str_1, $tweet->text, $success_flg, $error_msg, $tweet->retweet_count));
+        $res = $this->DBobj->execute($sql, array((int)$this->Account_ID, $tweet->id_str, $this->SerchAction->search_str_1, $tweet->text, $success_flg, $error_msg, $tweet->retweet_count));
 
         return $this;
     }
