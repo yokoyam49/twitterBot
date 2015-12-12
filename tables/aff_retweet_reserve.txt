@@ -2,10 +2,14 @@
 
 
 id			INT,key,auto_increment
-tw_account_id		INT			RT先アカウント
+aff_api			VARCHAR(255)		rakuten or amazon
+aff_api_account_id	INT			aff_rakuten or aff_amazon のid
+rtw_account_id		INT			RT先アカウント
 tweet_id		VARCHAR(255)		対象TWID
-reserve_date		TIMESTAMP		予約日時 これを過ぎたらRT
+retweet_datetime	TIMESTAMP		予約日時 これを過ぎたらRT
 retweeted_flg		tinyint(1)		RT済みフラグ
+reserve_item_name_mb	TEXT			商品名
+reserve_item_shop_name_mb	TEXT		店名
 del_flg			tinyint(1)		
 create_date
 update_date
