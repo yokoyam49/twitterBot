@@ -1,0 +1,19 @@
+・aff_rakuten_account
+楽天アフィリエイトアカウント
+
+id
+account_name_mb		TEXT		アカウント名
+-ツイート先ツイッターアカウント情報-------
+tw_user_id		VARCHAR(255)	ツイッターユーザーID
+tw_screen_name		VARCHAR(255)	自分のスクリーン名
+tw_consumer_key		VARCHAR(255)	トークン情報
+tw_consumer_secret	VARCHAR(255)	トークン情報
+tw_access_token		VARCHAR(255)	トークン情報
+tw_access_token_secret	VARCHAR(255)	トークン情報
+------------------------------------------
+rtw_account_id		INT		ツイートリツイート先 ms_accountテーブルid
+retweet_time		timestamp	基本リツイート時間
+use_flg			TINYINT(1)	使用フラグ
+create_date
+update_date
+

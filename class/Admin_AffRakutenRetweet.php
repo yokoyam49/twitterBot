@@ -9,22 +9,26 @@ require_once(_RAKUTEN_SDK_PATH."autoload.php");
 require_once(_TWITTER_API_PATH."statuses/statuses_update.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 
-class Admin_Aff_Rakuten_Retweet
+class Admin_AffRakutenRetweet
 {
     //アプリID
     private $rakuten_apuri_id = '1055279728800101163';
     //アフェリエイトID
     private $afferiate_id = '149211ea.72c5d66e.149211eb.93a8db3b';
 
+    private $aff_rakuten_account_info = null;
+
     private $ViewObj;
     private $RequestObj;
+    private $DBobj;
     private $twObj;
     private $logFile;
 
     private $Session = array(
-                    'aff_rakuten_account_info' => array(),
+                    'aff_rakuten_account_id' => null,
                     'aff_retweet_reserve_info' => array(),
                     'search_api' => null,//0->商品検索 1->ランキング
+                    'search_api_parms_list' => array(),
                     'search_api_parms' => array(),
                     'search_item_result' => array(),
                     'select_item' => null,
@@ -37,19 +41,69 @@ class Admin_Aff_Rakuten_Retweet
                     0 => '楽天市場商品検索API',
                     1 => '楽天市場ランキングAPI'
             );
+    private $api_serch_method = array(
+                    0 => 'itemSerch',
+                    1 => 'ranking'
+            );
+    private $request_parms = array(
+                    0 => array(
+                        'keyword',
+                        'shopCode',
+                        'itemCode',
+                        'genreId',
+                        'tagId',
+                        'page',
+                        'sort',
+                        'carrier',
+                        'field',
+                        'NGKeyword',
+                        'minAffiliateRate'
+                        ),
+                    1 => array(
+                        'genreId',
+                        'age',
+                        'sex',
+                        'carrier',
+                        'page'
+                        )
+                );
 
     public function __construct()
     {
         $this->ViewObj = new View();
         $this->RequestObj = new Request();
+        $this->DBobj = new DB_Base();
 
         $this->Session = $_SESSION;
+
+        //affアカウントIDがセットされていればアカウント情報取得
+        if(!is_null($this->Session['aff_rakuten_account_id'])){
+            $this->aff_rakuten_account_info = $this->get_RakutenAccountInfo($this->Session['aff_rakuten_account_id']);
+        }
     }
 
     private function setSession()
     {
         unset($_SESSION);
         $_SESSION = $this->Session;
+    }
+
+    public function index()
+    {
+        //全アカウント取得
+        $all_aff_rakuten_account_info = $this->get_ALLRakutenAccountInfo();
+
+        $rakuten_account = array();
+        foreach($all_aff_rakuten_account_info as $account){
+            $rakuten_account[$account->id] = $account->account_name_mb;
+        }
+
+        $this->ViewObj->assign('data', $this->Session);
+        $this->ViewObj->assign('rakuten_account', $rakuten_account);
+        $this->ViewObj->assign('api_select', $this->api_select);
+        $this->ViewObj->left_delimiter = '<!--{';
+        $this->ViewObj->right_delimiter = '}-->';
+        $this->ViewObj->display('Admin_Aff_Rakuten_Retweet.tpl');
     }
 
     //ajax アカウント選択
@@ -62,7 +116,7 @@ class Admin_Aff_Rakuten_Retweet
 
         $request = $this->RequestObj;
         $aff_rakuten_account_id = $request->aff_rakuten_account_id;
-        $this->Session['aff_rakuten_account_info'] = $this->get_RakutenAccountInfo($aff_rakuten_account_id);
+        $this->Session['aff_rakuten_account_id'] = $aff_rakuten_account_id;
         $this->Session['aff_retweet_reserve_info'] = $this->get_RetweetReserveInfo($aff_rakuten_account_id);
 
         $this->setSession();
@@ -79,8 +133,10 @@ class Admin_Aff_Rakuten_Retweet
         }
 
         $request = $this->RequestObj;
-        $search_api = $request->search_api;
+        $search_api = $request->api_select_id;
+
         $this->Session['search_api'] = $search_api;
+        $this->Session['search_api_parms_list'] = $this->request_parms[$search_api];
         $this->Session['search_api_parms'] = array();
         $this->Session['search_item_result'] = array();
 
@@ -92,20 +148,6 @@ class Admin_Aff_Rakuten_Retweet
     //ajax 商品検索
     public function ajax_search_items()
     {
-        $request_parms = array(
-                'keyword',
-                'shopCode',
-                'itemCode',
-                'genreId',
-                'tagId',
-                'page',
-                'sort',
-                'carrier',
-                'field',
-                'NGKeyword',
-                'minAffiliateRate'
-            );
-
         if(!$this->isAjax()){
             echo 'no ajax';
             exit();
@@ -114,9 +156,10 @@ class Admin_Aff_Rakuten_Retweet
         $this->Session['search_api_parms'] = array();
         $this->Session['search_item_result'] = array();
 
+        //検索パラメーター生成
         $request = $this->RequestObj;
         $search_parms = array();
-        foreach($request_parms as $parm){
+        foreach($this->Session['search_api_parms_list'] as $parm){
             if(isset($request->$parm) and strlen($request->$parm)){
                 $search_parms[$parm] = $request->$parm;
             }
@@ -124,6 +167,23 @@ class Admin_Aff_Rakuten_Retweet
         }
         $this->Session['search_api_parms'] = $search_parms;
 
+        //検索メソッド実行
+        $serch_method = 'search_'.$this->api_serch_method[$this->Session['search_api']];
+        if(method_exists($this, $serch_method)){
+            $this->$serch_method($search_parms);
+        }else{
+            header('Content-Type: application/json');
+            echo 'Error search_api no_set';
+            exit();
+        }
+
+        $this->setSession();
+        header('Content-Type: application/json');
+        echo json_encode($this->Session);
+    }
+    //商品検索
+    private function search_itemSerch($search_parms)
+    {
         $rakuten_client = new RakutenRws_Client();
         $rakuten_client->setApplicationId($this->rakuten_apuri_id);
         $rakuten_client->setAffiliateId($this->afferiate_id);
@@ -137,9 +197,22 @@ class Admin_Aff_Rakuten_Retweet
             exit();
         }
 
-        $this->setSession();
-        header('Content-Type: application/json');
-        echo json_encode($this->Session);
+    }
+    //ランキング検索
+    private function search_ranking($search_parms)
+    {
+        $rakuten_client = new RakutenRws_Client();
+        $rakuten_client->setApplicationId($this->rakuten_apuri_id);
+        $rakuten_client->setAffiliateId($this->afferiate_id);
+
+        $response = $client->execute('IchibaItemRanking', $search_parms);
+        if ($response->isOk()){
+            $this->Session['search_item_result'] = $response;
+        } else {
+            header('Content-Type: application/json');
+            echo 'search_error '.$response->getMessage();
+            exit();
+        }
     }
 
     //ajax 商品選択
@@ -168,17 +241,21 @@ class Admin_Aff_Rakuten_Retweet
             echo 'no ajax';
             exit();
         }
+
+        //affアカウントがセットされているかチェック
+        $this->check_setAffAcount();
+
         $request = $this->RequestObj;
         $this->Session['retweet_img'] = $request->retweet_img;
         $this->Session['retweet_comment'] = $request->retweet_comment;
         $this->Session['retweet_time'] = $request->retweet_time;
 
-        $twitter_account = getTwAccountInfo($this->Session['aff_rakuten_account_info']->tw_account_id);
+        //$twitter_account = getTwAccountInfo($this->Session['aff_rakuten_account_info']->tw_account_id);
         $twObj = new TwitterOAuth(
-                $twitter_account->consumer_key,
-                $twitter_account->consumer_secret,
-                $twitter_account->access_token,
-                $twitter_account->access_token_secret
+                $this->aff_rakuten_account_info->tw_consumer_key,
+                $this->aff_rakuten_account_info->tw_consumer_secret,
+                $this->aff_rakuten_account_info->tw_access_token,
+                $this->aff_rakuten_account_info->tw_access_token_secret
             );
 
         //画像セット
@@ -229,12 +306,21 @@ class Admin_Aff_Rakuten_Retweet
         }
     }
 
+    private function check_setAffAcount()
+    {
+        if(is_null($this->aff_rakuten_account_info)){
+            header('Content-Type: application/json');
+            echo 'ERROR no_set_account';
+            exit();
+        }
+    }
+
     private function setReserveRetweet($tweet_id, $item_name, $shop_name, $id = null)
     {
         $reserve_fields = array(
-                'aff_api' => 'rakuten',
-                'aff_api_account_id' => $this->Session['aff_rakuten_account_info']->id,
-                'rtw_account_id' => $this->Session['aff_rakuten_account_info']->rtw_account_id,
+                'aff_api'               => 'rakuten',
+                'aff_api_account_id'    => $this->aff_rakuten_account_info->id,
+                'rtw_account_id'        => $this->aff_rakuten_account_info->rtw_account_id,
                 'tweet_id' => $tweet_id,
                 'retweet_datetime' => $this->Session['retweet_time'],
                 'retweeted_flg' => 0,
@@ -282,10 +368,19 @@ class Admin_Aff_Rakuten_Retweet
     private function get_RakutenAccountInfo($aff_rakuten_account_id)
     {
         $sql = "SELECT *
-                FROM aff_rakuten
-                WHERE id = ?";
+                FROM aff_rakuten_account
+                WHERE use_flg = 1 AND id = ?";
         $res = $this->DBobj->query($sql, array($aff_rakuten_account_id));
         return $res[0];
+    }
+
+    private function get_ALLRakutenAccountInfo()
+    {
+        $sql = "SELECT *
+                FROM aff_rakuten_account
+                WHERE use_flg = 1";
+        $res = $this->DBobj->query($sql);
+        return $res;
     }
 
     private function get_RetweetReserveInfo($aff_rakuten_account_id)
