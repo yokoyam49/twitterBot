@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 require_once(_TWITTER_CLASS_PATH."DB_Base.php");
 require_once(_TWITTER_CLASS_PATH."MS_Account.php");
@@ -74,7 +73,7 @@ class Admin_AffRakutenRetweet
         $this->RequestObj = new Request();
         $this->DBobj = new DB_Base();
 
-        $this->Session = $_SESSION;
+        $this->Session = $_SESSION['aff_rakuten_data'];
 
         //affアカウントIDがセットされていればアカウント情報取得
         if(!is_null($this->Session['aff_rakuten_account_id'])){
@@ -84,8 +83,8 @@ class Admin_AffRakutenRetweet
 
     private function setSession()
     {
-        unset($_SESSION);
-        $_SESSION = $this->Session;
+        unset($_SESSION['aff_rakuten_data']);
+        $_SESSION['aff_rakuten_data'] = $this->Session;
     }
 
     public function index()
@@ -141,6 +140,7 @@ class Admin_AffRakutenRetweet
         $this->Session['search_item_result'] = array();
 
         $this->setSession();
+
         header('Content-Type: application/json');
         echo json_encode($this->Session);
     }
@@ -163,7 +163,6 @@ class Admin_AffRakutenRetweet
             if(isset($request->$parm) and strlen($request->$parm)){
                 $search_parms[$parm] = $request->$parm;
             }
-            $search_parms['imageFlag'] = 1;
         }
         $this->Session['search_api_parms'] = $search_parms;
 
@@ -181,33 +180,48 @@ class Admin_AffRakutenRetweet
         header('Content-Type: application/json');
         echo json_encode($this->Session);
     }
-    //商品検索
+    //APIレスポンスをSESSIONセットのため配列化
+    private function convArr_RakutenApiResponce($responce){
+        $search_item_result = array();
+        foreach($responce as $item){
+            $search_item_result[] = $item;
+            // $item_result = array();
+            // foreach($item as $sec => $value){
+            //     $item_result[$sec] = $value;
+            // }
+        }
+//var_dump($search_item_result);
+        return $search_item_result;
+    }
+    //商品検索------------------------
     private function search_itemSerch($search_parms)
     {
         $rakuten_client = new RakutenRws_Client();
         $rakuten_client->setApplicationId($this->rakuten_apuri_id);
         $rakuten_client->setAffiliateId($this->afferiate_id);
 
-        $response = $client->execute('IchibaItemSearch', $search_parms);
+        $search_parms['imageFlag'] = 1;
+        $response = $rakuten_client->execute('IchibaItemSearch', $search_parms);
         if ($response->isOk()){
-            $this->Session['search_item_result'] = $response;
+            //$this->Session['search_item_result'] = $response;
+            $this->Session['search_item_result'] = $this->convArr_RakutenApiResponce($response);
         } else {
             header('Content-Type: application/json');
             echo 'search_error '.$response->getMessage();
             exit();
         }
-
     }
-    //ランキング検索
+    //ランキング検索-----------------------
     private function search_ranking($search_parms)
     {
         $rakuten_client = new RakutenRws_Client();
         $rakuten_client->setApplicationId($this->rakuten_apuri_id);
         $rakuten_client->setAffiliateId($this->afferiate_id);
 
-        $response = $client->execute('IchibaItemRanking', $search_parms);
+        $response = $rakuten_client->execute('IchibaItemRanking', $search_parms);
         if ($response->isOk()){
-            $this->Session['search_item_result'] = $response;
+            //$this->Session['search_item_result'] = $response;
+            $this->Session['search_item_result'] = $this->convArr_RakutenApiResponce($response);
         } else {
             header('Content-Type: application/json');
             echo 'search_error '.$response->getMessage();

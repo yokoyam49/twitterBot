@@ -68,10 +68,12 @@ function item_search()
 {
     $("#search_item_result").empty();
     var params = $("#form_search_api_parms").serializeArray();
-    var post_data = [];
+    var post_data = {};
     for(index in params){
         post_data[params[index]["name"]] = params[index]["value"];
     }
+//alert(post_data);
+//return;
 
     $.ajax({
         type: "POST",
@@ -82,14 +84,14 @@ function item_search()
         for(index in data['search_item_result']){
             img_tag = [];
             for(img_index in data['search_item_result'][index]['smallImageUrls']){
-                img_url_splits = data['search_item_result'][index]['smallImageUrls'][img_index].split('?');
+                img_url_splits = data['search_item_result'][index]['smallImageUrls'][img_index]['imageUrl'].split('?');
                 img_tag.push("<img src=" + img_url_splits[0] + ">");
             }
 
             serach_item_result = {
                 "itemName" : data['search_item_result'][index]['itemName'],
                 "itemCaption" : data['search_item_result'][index]['itemCaption'],
-                "images" : img_tag.join();
+                "images" : img_tag.join()
             };
             $( "#serach_item_result_parts" ).tmpl(serach_item_result).appendTo('#search_item_result');
         }
@@ -127,7 +129,7 @@ function item_search()
     <div id="search_item_submit" style="display: none;">
         <div class="row">
             <div class="col-md-2">
-                <button type="button" class="btn btn-primary btn-block">商品検索</button>
+                <button type="button" class="btn btn-primary btn-block" onclick="item_search();">商品検索</button>
             </div>
         </div>
     </div>
