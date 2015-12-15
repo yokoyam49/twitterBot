@@ -70,7 +70,11 @@ function item_search()
     var params = $("#form_search_api_parms").serializeArray();
     var post_data = {};
     for(index in params){
-        post_data[params[index]["name"]] = params[index]["value"];
+//alert(params[index]["name"].length)
+//alert(params[index]["value"].length)
+        if(params[index]["value"].length){
+            post_data[params[index]["name"]] = params[index]["value"];
+        }
     }
 //alert(post_data);
 //return;
@@ -82,16 +86,30 @@ function item_search()
     }).done(function(data){
 
         for(index in data['search_item_result']){
-            img_tag = [];
+            small_img_tag = [];
+            wi = Math.floor(12 / data['search_item_result'][index]['smallImageUrls'].length);
+            if(wi > 4){wi = 4};
             for(img_index in data['search_item_result'][index]['smallImageUrls']){
                 img_url_splits = data['search_item_result'][index]['smallImageUrls'][img_index]['imageUrl'].split('?');
-                img_tag.push("<img src=" + img_url_splits[0] + ">");
+                small_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
+            }
+            middle_img_tag = [];
+            wi = Math.floor(12 / data['search_item_result'][index]['mediumImageUrls'].length);
+            if(wi > 4){wi = 4};
+            for(img_index in data['search_item_result'][index]['mediumImageUrls']){
+                img_url_splits = data['search_item_result'][index]['mediumImageUrls'][img_index]['imageUrl'].split('?');
+                middle_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
             }
 
             serach_item_result = {
+                "index" : index,
                 "itemName" : data['search_item_result'][index]['itemName'],
                 "itemCaption" : data['search_item_result'][index]['itemCaption'],
-                "images" : img_tag.join()
+                "shopName" : data['search_item_result'][index]['shopName'],
+                "itemPrice" : data['search_item_result'][index]['itemPrice'],
+                "affiliateRate" : data['search_item_result'][index]['affiliateRate'],
+                "small_img_tag" : small_img_tag.join(""),
+                "middle_img_tag" : middle_img_tag.join("")
             };
             $( "#serach_item_result_parts" ).tmpl(serach_item_result).appendTo('#search_item_result');
         }
@@ -151,25 +169,34 @@ function item_search()
 
 <script id="serach_item_result_parts" type="text/x-jquery-tmpl">
 <div class="row">
-    <div class="col-md-9">
-        ${itemName}
+  <div class="col-md-12">
+    <div class="panel">
+      <ul id="item_result_${index}" class="nav nav-tabs nav-justified">
+        <li class="active"><a href="#item_img_${index}" data-toggle="tab">画像</a></li>
+        <li><a href="#item_info_${index}" data-toggle="tab">商品説明</a></li>
+        <li><a href="#shop_info_${index}" data-toggle="tab">ショップ情報</a></li>
+      </ul>
+      <div id="myTabContent_${index}" class="tab-content">
+        <div class="tab-pane fade active in" id="item_img_${index}">
+          <div class="row">
+            {{html small_img_tag}}
+          </div>
+          <div class="row">
+            {{html middle_img_tag}}
+          </div>
+        </div>
+        <div class="tab-pane fade" id="item_info_${index}">
+          <div class="row">商品名：${itemName}</div>
+          <div class="row">商品説明：${itemCaption}</div>
+        </div>
+        <div class="tab-pane fade" id="shop_info_${index}">
+          <div class="row">ショップ名：${shopName}</div>
+          <div class="row">価格${itemPrice}円</div>
+          <div class="row">アフェリエイト率：${affiliateRate}%</div>
+        </div>
+      </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-md-9">
-        {{html images}}<!--imgタグつきで生成-->
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-9">
-        ${itemCaption}
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-2">
-        <button type="button" class="btn btn-primary btn-block">選択</button>
-    </div>
+  </div>
 </div>
 </script>
 

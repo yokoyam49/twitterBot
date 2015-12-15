@@ -160,8 +160,9 @@ class Admin_AffRakutenRetweet
         $request = $this->RequestObj;
         $search_parms = array();
         foreach($this->Session['search_api_parms_list'] as $parm){
-            if(isset($request->$parm) and strlen($request->$parm)){
-                $search_parms[$parm] = $request->$parm;
+            $req_param = $request->$parm;
+            if($req_param and strlen($req_param)){
+                $search_parms[$parm] = $req_param;
             }
         }
         $this->Session['search_api_parms'] = $search_parms;
