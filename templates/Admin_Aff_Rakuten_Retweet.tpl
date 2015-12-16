@@ -17,6 +17,18 @@
     <script type="text/javascript" src="/bootflat/js/site.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery-1.10.1.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery.tmpl.min.js"></script>
+<style type="text/css">  
+<!--
+    .loadingMsg{
+    text-align:center;
+    padding-top:100px;
+    width:100px;
+    background-image:url("/img/loading.gif");
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+-->
+</style>
 
 <script type="text/javascript">
 
@@ -67,6 +79,7 @@ function api_change()
 function item_search()
 {
     $("#search_item_result").empty();
+    $("#search_item_result").addClass("loadingMsg");
     var params = $("#form_search_api_parms").serializeArray();
     var post_data = {};
     for(index in params){
@@ -84,7 +97,7 @@ function item_search()
         url: "/admin/AffRakutenRetweet/ajax_search_items/",
         data: post_data
     }).done(function(data){
-
+        $("#search_item_result").removeClass("loadingMsg");
         for(index in data['search_item_result']){
             small_img_tag = [];
             wi = Math.floor(12 / data['search_item_result'][index]['smallImageUrls'].length);
@@ -154,6 +167,17 @@ function item_search()
 
     <div id="search_item_result"></div>
 
+    <div id="item_result_pager">
+        <div class="row example-pagination">
+            <div class="col-md-12">
+                <ul class="pager">
+                    <li class="previous disabled"><button type="button" onclick="item_search();">前ページ</button></li>
+                    <li class="next"><button type="button" onclick="item_search();">次ページ</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 </div>
@@ -184,15 +208,30 @@ function item_search()
           <div class="row">
             {{html middle_img_tag}}
           </div>
+          <div class="row">
+            <div class="col-md-2">
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+            </div>
+          </div>
         </div>
         <div class="tab-pane fade" id="item_info_${index}">
           <div class="row">商品名：${itemName}</div>
           <div class="row">商品説明：${itemCaption}</div>
+          <div class="row">
+            <div class="col-md-2">
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+            </div>
+          </div>
         </div>
         <div class="tab-pane fade" id="shop_info_${index}">
           <div class="row">ショップ名：${shopName}</div>
           <div class="row">価格${itemPrice}円</div>
           <div class="row">アフェリエイト率：${affiliateRate}%</div>
+          <div class="row">
+            <div class="col-md-2">
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
