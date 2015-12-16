@@ -30,6 +30,8 @@ class Admin_AffRakutenRetweet
                     'search_api_parms_list' => array(),
                     'search_api_parms' => array(),
                     'search_item_result' => array(),
+                    'search_item_result_max_page' => null,
+                    'search_item_result_now_page' => null,
                     'select_item' => null,
                     'retweet_img' => array(),
                     'retweet_comment' => null,
@@ -181,6 +183,33 @@ class Admin_AffRakutenRetweet
         header('Content-Type: application/json');
         echo json_encode($this->Session);
     }
+    //ページ移動
+    public function ajax_move_pages()
+    {
+        if(!$this->isAjax()){
+            echo 'no ajax';
+            exit();
+        }
+
+        $this->Session['search_item_result'] = array();
+
+        $search_parms = $this->Session['search_api_parms'];
+        $request = $this->RequestObj;
+        $search_parms['page'] = $request->page;
+        //検索メソッド実行
+        $serch_method = 'search_'.$this->api_serch_method[$this->Session['search_api']];
+        if(method_exists($this, $serch_method)){
+            $this->$serch_method($search_parms);
+        }else{
+            header('Content-Type: application/json');
+            echo 'Error search_api no_set';
+            exit();
+        }
+
+        $this->setSession();
+        header('Content-Type: application/json');
+        echo json_encode($this->Session);
+    }
     //APIレスポンスをSESSIONセットのため配列化
     private function convArr_RakutenApiResponce($responce){
         $search_item_result = array();
@@ -206,6 +235,8 @@ class Admin_AffRakutenRetweet
         if ($response->isOk()){
             //$this->Session['search_item_result'] = $response;
             $this->Session['search_item_result'] = $this->convArr_RakutenApiResponce($response);
+            $this->Session['search_item_result_max_page'] = $response['pageCount'];
+            $this->Session['search_item_result_now_page'] = $response['page'];
         } else {
             header('Content-Type: application/json');
             echo 'search_error '.$response->getMessage();
@@ -223,6 +254,8 @@ class Admin_AffRakutenRetweet
         if ($response->isOk()){
             //$this->Session['search_item_result'] = $response;
             $this->Session['search_item_result'] = $this->convArr_RakutenApiResponce($response);
+            $this->Session['search_item_result_max_page'] = $response['pageCount'];
+            $this->Session['search_item_result_now_page'] = $response['page'];
         } else {
             header('Content-Type: application/json');
             echo 'search_error '.$response->getMessage();

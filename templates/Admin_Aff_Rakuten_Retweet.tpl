@@ -17,7 +17,7 @@
     <script type="text/javascript" src="/bootflat/js/site.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery-1.10.1.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery.tmpl.min.js"></script>
-<style type="text/css">  
+<style type="text/css">
 <!--
     .loadingMsg{
     text-align:center;
@@ -31,25 +31,8 @@
 </style>
 
 <script type="text/javascript">
-
-// $("#api_select").change(function()
-// {
-//     $.ajax({
-//         type: "POST",
-//         url: "/admin/AffRakutenRetweet/ajax_api_select/",
-//         data: {
-//             "api_select_id": $("#api_select").val()
-//         }
-//     }).done(function(data){
-
-//         for(index in data['search_api_parms_list']){
-//             parms_html = {
-//                 "parm_name" : data['search_api_parms_list'][index]
-//             };
-//             $( "#api_parms" ).tmpl(parms_html).appendTo('#search_api_parms');
-//         }
-//     });
-// });
+var max_page = 0;
+var now_page = 0;
 
 function api_change()
 {
@@ -78,19 +61,16 @@ function api_change()
 
 function item_search()
 {
+    $("#item_result_pager").hide();
     $("#search_item_result").empty();
     $("#search_item_result").addClass("loadingMsg");
     var params = $("#form_search_api_parms").serializeArray();
     var post_data = {};
     for(index in params){
-//alert(params[index]["name"].length)
-//alert(params[index]["value"].length)
         if(params[index]["value"].length){
             post_data[params[index]["name"]] = params[index]["value"];
         }
     }
-//alert(post_data);
-//return;
 
     $.ajax({
         type: "POST",
@@ -98,35 +78,93 @@ function item_search()
         data: post_data
     }).done(function(data){
         $("#search_item_result").removeClass("loadingMsg");
-        for(index in data['search_item_result']){
-            small_img_tag = [];
-            wi = Math.floor(12 / data['search_item_result'][index]['smallImageUrls'].length);
-            if(wi > 4){wi = 4};
-            for(img_index in data['search_item_result'][index]['smallImageUrls']){
-                img_url_splits = data['search_item_result'][index]['smallImageUrls'][img_index]['imageUrl'].split('?');
-                small_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
-            }
-            middle_img_tag = [];
-            wi = Math.floor(12 / data['search_item_result'][index]['mediumImageUrls'].length);
-            if(wi > 4){wi = 4};
-            for(img_index in data['search_item_result'][index]['mediumImageUrls']){
-                img_url_splits = data['search_item_result'][index]['mediumImageUrls'][img_index]['imageUrl'].split('?');
-                middle_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
-            }
-
-            serach_item_result = {
-                "index" : index,
-                "itemName" : data['search_item_result'][index]['itemName'],
-                "itemCaption" : data['search_item_result'][index]['itemCaption'],
-                "shopName" : data['search_item_result'][index]['shopName'],
-                "itemPrice" : data['search_item_result'][index]['itemPrice'],
-                "affiliateRate" : data['search_item_result'][index]['affiliateRate'],
-                "small_img_tag" : small_img_tag.join(""),
-                "middle_img_tag" : middle_img_tag.join("")
-            };
-            $( "#serach_item_result_parts" ).tmpl(serach_item_result).appendTo('#search_item_result');
-        }
+        max_page = data['search_item_result_max_page'];
+        now_page = data['search_item_result_now_page'];
+        show_item_result(data);
+        $("#item_result_pager").show();
+        pager_cont();
     });
+}
+
+function next_page()
+{
+    if(now_page < max_page){
+        move_pages(now_page + 1);
+    }
+}
+function pre_page()
+{
+    if(now_page > 1){
+        move_pages(now_page - 1);
+    }
+}
+
+function move_pages(page)
+{
+    $("#item_result_pager").hide();
+    $("#search_item_result").empty();
+    $("#search_item_result").addClass("loadingMsg");
+    $.ajax({
+        type: "POST",
+        url: "/admin/AffRakutenRetweet/ajax_move_pages/",
+        data: {
+            'page' : page
+        }
+    }).done(function(data){
+        $("#search_item_result").removeClass("loadingMsg");
+        max_page = data['search_item_result_max_page'];
+        now_page = data['search_item_result_now_page'];
+        show_item_result(data);
+        $("#item_result_pager").show();
+        pager_cont();
+    });
+}
+
+function pager_cont()
+{
+    if(now_page >= max_page){
+        $("#result-next").addClass('disabled');
+    }else{
+        $("#result-next").removeClass('disabled');
+    }
+    if(now_page <= 1){
+        $("#result-pre").addClass('disabled');
+    }else{
+        $("#result-pre").removeClass('disabled');
+    }
+}
+
+function show_item_result(data)
+{
+    for(index in data['search_item_result']){
+        small_img_tag = [];
+        wi = Math.floor(12 / data['search_item_result'][index]['smallImageUrls'].length);
+        if(wi > 4){wi = 4};
+        for(img_index in data['search_item_result'][index]['smallImageUrls']){
+            img_url_splits = data['search_item_result'][index]['smallImageUrls'][img_index]['imageUrl'].split('?');
+            small_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
+        }
+        middle_img_tag = [];
+        wi = Math.floor(12 / data['search_item_result'][index]['mediumImageUrls'].length);
+        if(wi > 4){wi = 4};
+        for(img_index in data['search_item_result'][index]['mediumImageUrls']){
+            img_url_splits = data['search_item_result'][index]['mediumImageUrls'][img_index]['imageUrl'].split('?');
+            middle_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
+        }
+
+        serach_item_result = {
+            "index" : index,
+            "itemName" : data['search_item_result'][index]['itemName'],
+            "itemCaption" : data['search_item_result'][index]['itemCaption'],
+            "shopName" : data['search_item_result'][index]['shopName'],
+            "itemPrice" : data['search_item_result'][index]['itemPrice'],
+            "affiliateRate" : data['search_item_result'][index]['affiliateRate'],
+            "affiliateUrl" : data['search_item_result'][index]['affiliateUrl'],
+            "small_img_tag" : small_img_tag.join(""),
+            "middle_img_tag" : middle_img_tag.join("")
+        };
+        $( "#serach_item_result_parts" ).tmpl(serach_item_result).appendTo('#search_item_result');
+    }
 }
 
 </script>
@@ -167,14 +205,12 @@ function item_search()
 
     <div id="search_item_result"></div>
 
-    <div id="item_result_pager">
-        <div class="row example-pagination">
-            <div class="col-md-12">
-                <ul class="pager">
-                    <li class="previous disabled"><button type="button" onclick="item_search();">前ページ</button></li>
-                    <li class="next"><button type="button" onclick="item_search();">次ページ</button></li>
-                </ul>
-            </div>
+    <div id="item_result_pager" style="display: none;">
+        <div class="col-md-9">
+            <ul class="pager">
+                <li id="result-pre" class="previous" onclick="pre_page();"><a href="javascript:void(0)">前ページ</a></li>
+                <li id="result-next" class="next" onclick="next_page();"><a href="javascript:void(0)">次ページ</a></li>
+            </ul>
         </div>
     </div>
 
@@ -202,24 +238,27 @@ function item_search()
       </ul>
       <div id="myTabContent_${index}" class="tab-content">
         <div class="tab-pane fade active in" id="item_img_${index}">
+          <!--
           <div class="row">
             {{html small_img_tag}}
           </div>
+          -->
           <div class="row">
             {{html middle_img_tag}}
           </div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
             </div>
           </div>
         </div>
         <div class="tab-pane fade" id="item_info_${index}">
           <div class="row">商品名：${itemName}</div>
           <div class="row">商品説明：${itemCaption}</div>
+          <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
             </div>
           </div>
         </div>
@@ -229,7 +268,7 @@ function item_search()
           <div class="row">アフェリエイト率：${affiliateRate}%</div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">選択</button>
+              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
             </div>
           </div>
         </div>
