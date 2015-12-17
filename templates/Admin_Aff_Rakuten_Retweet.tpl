@@ -17,9 +17,10 @@
     <script type="text/javascript" src="/bootflat/js/site.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery-1.10.1.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.leanModal.min.js"></script>
 <style type="text/css">
 <!--
-    .loadingMsg{
+.loadingMsg{
     text-align:center;
     padding-top:100px;
     width:100px;
@@ -27,12 +28,48 @@
     background-position: center top;
     background-repeat: no-repeat;
 }
+
+#lean_overlay  {
+    position: fixed; z-index:100;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    background: #000;
+    display: none;
+}
+
+#modal-window {
+    background-color: #FFFFFF;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
+    display: none;
+    padding: 30px;
+    width: 300px;
+    height: 300px;
+}
+
+.modal_close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: block;
+    /* widthとheightは閉じるボタンの画像の幅を指定 */
+    width: 28px;
+    height: 28px;
+    /* 閉じるボタンの画像は自分で用意 */
+    background: url('../images/close-popup.png') no-repeat;
+    z-index: 2;
+}
 -->
 </style>
 
 <script type="text/javascript">
 var max_page = 0;
 var now_page = 0;
+
+$(window).load(function(){
+    api_change();
+});
 
 function api_change()
 {
@@ -219,6 +256,42 @@ function show_item_result(data)
 </div>
 </div>
 
+<!--モーダル-->
+<div id="tweet-modal" class="modal">
+<div class="modal-dialog">
+<div class="modal-content">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h4 class="modal-title">Contact</h4>
+  </div>
+  <div class="modal-body">
+    <p>Feel free to contact us for any issues you might have with our products.</p>
+    <div class="row">
+      <div class="col-xs-6">
+        <label>Name</label>
+        <input type="text" class="form-control" placeholder="Name">
+      </div>
+      <div class="col-xs-6">
+        <label>Email</label>
+        <input type="text" class="form-control" placeholder="Email">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <label>Message</label>
+        <textarea class="form-control" rows="3">Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac consectetur ac</textarea>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-success">Send</button>
+  </div>
+</div>
+</div>
+</div>
+
+<!--検索パラメーター入力欄-->
 <script id="api_parms" type="text/x-jquery-tmpl">
 <div class="row">
     <div class="col-md-6">
@@ -227,6 +300,7 @@ function show_item_result(data)
 </div>
 </script>
 
+<!--検索結果-->
 <script id="serach_item_result_parts" type="text/x-jquery-tmpl">
 <div class="row">
   <div class="col-md-12">
@@ -248,7 +322,7 @@ function show_item_result(data)
           </div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
             </div>
           </div>
         </div>
@@ -258,7 +332,7 @@ function show_item_result(data)
           <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
             </div>
           </div>
         </div>
@@ -268,7 +342,7 @@ function show_item_result(data)
           <div class="row">アフェリエイト率：${affiliateRate}%</div>
           <div class="row">
             <div class="col-md-2">
-              <button type="button" class="btn btn-primary btn-block" onclick="item_select();">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
             </div>
           </div>
         </div>
