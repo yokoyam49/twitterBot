@@ -78,6 +78,7 @@ function api_change()
 //alert($("#api_select_id").val());
     $("#search_api_parms").empty();
     $("#search_item_submit").hide();
+    $("#search_api_parms").addClass("loadingMsg");
     $.ajax({
         type: "POST",
         url: "/admin/AffRakutenRetweet/ajax_api_select/",
@@ -204,6 +205,38 @@ function show_item_result(data)
     }
 }
 
+function item_select(item_index)
+{
+    $("#tweet-modal").addClass("loadingMsg");
+    $.ajax({
+        type: "POST",
+        url: "/admin/AffRakutenRetweet/item_select/",
+        data: {
+            'item_index' : item_index
+        }
+    }).done(function(data){
+        middle_img_tag = [];
+        wi = Math.floor(12 / data['search_item_result'][item_index]['mediumImageUrls'].length);
+        if(wi > 4){wi = 4};
+        for(img_index in data['search_item_result'][item_index]['mediumImageUrls']){
+            img_url_splits = data['search_item_result'][item_index]['mediumImageUrls'][img_index]['imageUrl'].split('?');
+            middle_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
+        }
+        
+        select_item_data = {
+            "index" : index,
+            "itemName" : data['search_item_result'][item_index]['itemName'],
+            "itemCaption" : data['search_item_result'][item_index]['itemCaption'],
+            "shopName" : data['search_item_result'][item_index]['shopName'],
+            "itemPrice" : data['search_item_result'][item_index]['itemPrice'],
+            "affiliateRate" : data['search_item_result'][item_index]['affiliateRate'],
+            "affiliateUrl" : data['search_item_result'][item_index]['affiliateUrl'],
+            "middle_img_tag" : middle_img_tag.join("")
+        };
+        $( "#tweet-modal_content" ).tmpl(data).appendTo('#tweet-modal');
+    });
+}
+
 </script>
 
 </head>
@@ -257,36 +290,10 @@ function show_item_result(data)
 </div>
 
 <!--モーダル-->
-<div id="tweet-modal" class="modal">
+<div class="modal">
 <div class="modal-dialog">
-<div class="modal-content">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h4 class="modal-title">Contact</h4>
-  </div>
-  <div class="modal-body">
-    <p>Feel free to contact us for any issues you might have with our products.</p>
-    <div class="row">
-      <div class="col-xs-6">
-        <label>Name</label>
-        <input type="text" class="form-control" placeholder="Name">
-      </div>
-      <div class="col-xs-6">
-        <label>Email</label>
-        <input type="text" class="form-control" placeholder="Email">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-xs-12">
-        <label>Message</label>
-        <textarea class="form-control" rows="3">Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac consectetur ac</textarea>
-      </div>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-    <button type="button" class="btn btn-success">Send</button>
-  </div>
+<div id="tweet-modal" class="modal-content">
+
 </div>
 </div>
 </div>
@@ -350,6 +357,48 @@ function show_item_result(data)
     </div>
   </div>
 </div>
+</script>
+
+<!--モーダルテンプレート-->
+<script id="tweet-modal_content" type="text/x-jquery-tmpl">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h4 class="modal-title">Contact</h4>
+  </div>
+
+  <div class="modal-body">
+    <div class="panel">
+      <ul id="item_retweet_infopanel" class="nav nav-tabs nav-justified">
+        <li class="active"><a href="#retweet_content" data-toggle="tab">ツイート内容</a></li>
+        <li><a href="#retweet_item_info" data-toggle="tab">商品情報</a></li>
+      </ul>
+      <div id="TabContent_itemretweet" class="tab-content">
+        <div class="tab-pane fade active in" id="retweet_content">
+          <div class="row">商品名：${itemName}</div>
+          <div class="row">{{html img_select_checkbox}}</div>
+          <div class="row">{{html middle_img_tag}}</div>
+          <div class="row">
+            <div class="col-md-6">
+              <textarea name="comment" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="retweet_item_info">
+          <div class="row">商品名：${itemName}</div>
+          <div class="row">商品説明：${itemCaption}</div>
+          <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <div class="row">
+      <div class="col-md-2">
+        <button class="btn btn-primary" >ツイート</button>
+      </div>
+    </div>
+  </div>
 </script>
 
 </body>

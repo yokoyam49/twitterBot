@@ -32,7 +32,7 @@ class Admin_AffRakutenRetweet
                     'search_item_result' => array(),
                     'search_item_result_max_page' => null,
                     'search_item_result_now_page' => null,
-                    'select_item' => null,
+                    'select_item_index' => null,
                     'retweet_img' => array(),
                     'retweet_comment' => null,
                     'retweet_time' => null,
@@ -272,7 +272,7 @@ class Admin_AffRakutenRetweet
         }
 
         $request = $this->RequestObj;
-        $this->Session['select_item'] = $request->select_item;
+        $this->Session['select_item_index'] = $request->item_index;
         $this->Session['retweet_img'] = array();
         $this->Session['retweet_comment'] = null;
         $this->Session['retweet_time'] = null;
