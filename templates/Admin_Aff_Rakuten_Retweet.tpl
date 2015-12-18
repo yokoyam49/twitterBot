@@ -7,6 +7,7 @@
     <title>楽天アフェリエイト リツイート予約</title>
 
     <link rel="stylesheet" href="/bootflat/css/site.min.css">
+    <link rel="stylesheet" href="/css/jquery.datetimepicker.css">
     <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
     <!-- <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'> -->
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
@@ -15,9 +16,8 @@
       <script src="js/respond.min.js"></script>
     <![endif]-->
     <script type="text/javascript" src="/bootflat/js/site.min.js"></script>
-    <script type="text/javascript" src="/bootflat/js/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="/bootflat/js/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="/bootflat/js/jquery.tmpl.min.js"></script>
-    <script type="text/javascript" src="/js/jquery.leanModal.min.js"></script>
 <style type="text/css">
 <!--
 .loadingMsg{
@@ -86,7 +86,7 @@ function api_change()
             "api_select_id": $("#api_select_id").val()
         }
     }).done(function(data){
-
+        $("#search_api_parms").removeClass("loadingMsg");
         for(index in data['search_api_parms_list']){
             parms_html = {
                 "parm_name" : data['search_api_parms_list'][index]
@@ -207,22 +207,18 @@ function show_item_result(data)
 
 function item_select(item_index)
 {
-    $("#tweet-modal").addClass("loadingMsg");
+    $("#tweet-modal-content").empty();
+    $("#tweet-modal-content").addClass("loadingMsg");
     $.ajax({
         type: "POST",
-        url: "/admin/AffRakutenRetweet/item_select/",
+        url: "/admin/AffRakutenRetweet/ajax_item_select/",
         data: {
             'item_index' : item_index
         }
     }).done(function(data){
-        middle_img_tag = [];
+        $("#tweet-modal-content").removeClass("loadingMsg");
         wi = Math.floor(12 / data['search_item_result'][item_index]['mediumImageUrls'].length);
         if(wi > 4){wi = 4};
-        for(img_index in data['search_item_result'][item_index]['mediumImageUrls']){
-            img_url_splits = data['search_item_result'][item_index]['mediumImageUrls'][img_index]['imageUrl'].split('?');
-            middle_img_tag.push("<div class=\"col-md-" + wi + "\"><img src=" + img_url_splits[0] + " class=\"img-responsive\"></div>");
-        }
-        
         select_item_data = {
             "index" : index,
             "itemName" : data['search_item_result'][item_index]['itemName'],
@@ -231,9 +227,17 @@ function item_select(item_index)
             "itemPrice" : data['search_item_result'][item_index]['itemPrice'],
             "affiliateRate" : data['search_item_result'][item_index]['affiliateRate'],
             "affiliateUrl" : data['search_item_result'][item_index]['affiliateUrl'],
-            "middle_img_tag" : middle_img_tag.join("")
+            "mediumImageUrls" : data['search_item_result'][item_index]['mediumImageUrls'],
+            "wi" : wi,
         };
-        $( "#tweet-modal_content" ).tmpl(data).appendTo('#tweet-modal');
+        $( "#tweet-modal_content" ).tmpl(select_item_data).appendTo('#tweet-modal-content');
+        $(function() {
+            $('#datetimepicker').datetimepicker({
+              format: 'Y-m-d H:i',
+              inline: true,
+              lang: 'ja'
+            });
+        });
     });
 }
 
@@ -290,9 +294,9 @@ function item_select(item_index)
 </div>
 
 <!--モーダル-->
-<div class="modal">
+<div class="modal" id="tweet-modal" tabindex="-1">
 <div class="modal-dialog">
-<div id="tweet-modal" class="modal-content">
+<div id="tweet-modal-content" class="modal-content">
 
 </div>
 </div>
@@ -329,29 +333,33 @@ function item_select(item_index)
           </div>
           <div class="row">
             <div class="col-md-2">
-              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
             </div>
           </div>
         </div>
         <div class="tab-pane fade" id="item_info_${index}">
+        <div class="col-md-12">
           <div class="row">商品名：${itemName}</div>
           <div class="row">商品説明：${itemCaption}</div>
           <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
           <div class="row">
             <div class="col-md-2">
-              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
             </div>
           </div>
         </div>
+        </div>
         <div class="tab-pane fade" id="shop_info_${index}">
+        <div class="col-md-12">
           <div class="row">ショップ名：${shopName}</div>
           <div class="row">価格${itemPrice}円</div>
           <div class="row">アフェリエイト率：${affiliateRate}%</div>
           <div class="row">
             <div class="col-md-2">
-              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal">この商品を選択</button>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -363,7 +371,7 @@ function item_select(item_index)
 <script id="tweet-modal_content" type="text/x-jquery-tmpl">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h4 class="modal-title">Contact</h4>
+    <h4 class="modal-title">ツイート＆リツイート予約</h4>
   </div>
 
   <div class="modal-body">
@@ -374,19 +382,34 @@ function item_select(item_index)
       </ul>
       <div id="TabContent_itemretweet" class="tab-content">
         <div class="tab-pane fade active in" id="retweet_content">
-          <div class="row">商品名：${itemName}</div>
-          <div class="row">{{html img_select_checkbox}}</div>
-          <div class="row">{{html middle_img_tag}}</div>
+          <div class="row">
+            {{each mediumImageUrls}}
+            <div class="col-md-${wi}">
+              <input type="checkbox" name="select_img[]" value="1" />この画像を選択
+            </div>
+            {{/each}}
+          </div>
+          <div class="row">
+          {{each mediumImageUrls}}
+            <div class="col-md-${wi}"><img src="${imageUrl}" class="img-responsive"></div>
+          {{/each}}
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              コメント：
+              <textarea name="comment" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
           <div class="row">
             <div class="col-md-6">
-              <textarea name="comment" class="form-control" rows="3"></textarea>
+              リツイート予約時刻：<input name="retweet_time" type="text" id="datetimepicker">
             </div>
           </div>
         </div>
         <div class="tab-pane fade" id="retweet_item_info">
-          <div class="row">商品名：${itemName}</div>
-          <div class="row">商品説明：${itemCaption}</div>
-          <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
+          <div class="row"><div class="col-md-12">商品名：${itemName}</div></div>
+          <div class="row"><div class="col-md-12">商品説明：${itemCaption}</div></div>
+          <div class="row"><div class="col-md-12">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div></div>
         </div>
       </div>
     </div>
@@ -401,5 +424,6 @@ function item_select(item_index)
   </div>
 </script>
 
+<script type="text/javascript" src="/js/jquery.datetimepicker.js"></script>
 </body>
 </html>
