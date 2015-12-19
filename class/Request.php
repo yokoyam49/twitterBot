@@ -17,8 +17,12 @@ class Request
 
     public function __get($name)
     {
-        if(isset($this->RequestArr[$name]) and strlen($this->RequestArr[$name])){
-            return $this->RequestArr[$name];
+        if(isset($this->RequestArr[$name])){
+            if(is_array($this->RequestArr[$name])){
+                return $this->RequestArr[$name];
+            }elseif(strlen($this->RequestArr[$name])){
+                return $this->RequestArr[$name];
+            }
         }
         return false;
     }

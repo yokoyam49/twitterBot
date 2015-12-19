@@ -21,6 +21,8 @@ define('_TWITTER_SMARTY_PATH', _SYSTEM_ROOT.'smarty/');
 define('_TWITTER_TEMPLATE_PATH', _SYSTEM_ROOT.'templates/');
 //ドキュメントパス
 define('_DOCUMENT_PATH', _SYSTEM_ROOT.'public_html/');
+//ショートURL用ドメイン設定
+define('_SHORT_URL_DOMAIN', 'blog.graph.jp');
 //log
 define('_TWITTER_LOG_PATH', _SYSTEM_ROOT.'log/');
 

@@ -3,6 +3,7 @@
 require_once(_TWITTER_CLASS_PATH."DB_Base.php");
 require_once(_TWITTER_CLASS_PATH."MS_Account.php");
 require_once(_TWITTER_CLASS_PATH."Request.php");
+require_once(_TWITTER_CLASS_PATH."ShortUrl.php");
 require_once(_TWITTER_CLASS_PATH."View.php");
 require_once(_RAKUTEN_SDK_PATH."autoload.php");
 require_once(_TWITTER_API_PATH."statuses/statuses_update.php");
@@ -33,8 +34,9 @@ class Admin_AffRakutenRetweet
                     'search_item_result_max_page' => null,
                     'search_item_result_now_page' => null,
                     'select_item_index' => null,
-                    'retweet_img' => array(),
+                    'select_img' => array(),
                     'retweet_comment' => null,
+                    'retweet_link' => null,
                     'retweet_time' => null,
             );
 
@@ -273,8 +275,9 @@ class Admin_AffRakutenRetweet
 
         $request = $this->RequestObj;
         $this->Session['select_item_index'] = $request->item_index;
-        $this->Session['retweet_img'] = array();
+        $this->Session['select_img'] = array();
         $this->Session['retweet_comment'] = null;
+        $this->Session['retweet_link'] = null;
         $this->Session['retweet_time'] = null;
 
         $this->setSession();
@@ -290,13 +293,21 @@ class Admin_AffRakutenRetweet
             exit();
         }
 
+        $request = $this->RequestObj;
+        $select_img = $request->select_img;
+        foreach($select_img as &$img_url){
+            list($img_url, ) = explode('?', $img_url);
+        }
+        $this->Session['select_img'] = $select_img;
+        $this->Session['retweet_comment'] = $request->comment;
+        $this->Session['retweet_link'] = $request->affiliateUrl;
+        $this->Session['retweet_time'] = $request->retweet_time;
+        $this->Session['aff_rakuten_account_id'] = $request->aff_rakuten_account_id;
+        $this->Session['aff_retweet_reserve_info'] = $this->get_RetweetReserveInfo($this->Session['aff_rakuten_account_id']);
+        $this->aff_rakuten_account_info = $this->get_RakutenAccountInfo($this->Session['aff_rakuten_account_id']);
+
         //affアカウントがセットされているかチェック
         $this->check_setAffAcount();
-
-        $request = $this->RequestObj;
-        $this->Session['retweet_img'] = $request->retweet_img;
-        $this->Session['retweet_comment'] = $request->retweet_comment;
-        $this->Session['retweet_time'] = $request->retweet_time;
 
         //$twitter_account = getTwAccountInfo($this->Session['aff_rakuten_account_info']->tw_account_id);
         $twObj = new TwitterOAuth(
@@ -308,16 +319,19 @@ class Admin_AffRakutenRetweet
 
         //画像セット
         $media_ids = array();
-        foreach($this->Session['retweet_img'] as $retweet_img_url){
-            if($media_id = $this->Media_Upload($twObj)){
+        foreach($this->Session['select_img'] as $img_url){
+            if($media_id = $this->Media_Upload($twObj, $img_url)){
                 $media_ids[] = $media_id;
             }
         }
 
+        //ショートURL生成
+        $short_url = $this->make_short_url($this->Session['retweet_link']);
+
         //ツイート処理
         $statusesUpdateObj = new statuses_update($twObj);
         $option = array(
-                            "status" => $this->Session['retweet_comment'],
+                            "status" => $this->Session['retweet_comment'].$short_url,
                             "possibly_sensitive" => false,
                             "trim_user" => true,
                     );
@@ -338,7 +352,7 @@ class Admin_AffRakutenRetweet
         if(!is_null($this->Session['aff_retweet_reserve_info'])){
             $reserve_id = $this->Session['aff_retweet_reserve_info']->id;
         }
-        $item_info = $this->Session['search_item_result'][$this->Session['select_item']];
+        $item_info = $this->Session['search_item_result'][$this->Session['select_item_index']];
         $res = $this->setReserveRetweet(
                 $apires->id_str,
                 $item_info['itemName'],
@@ -444,6 +458,13 @@ class Admin_AffRakutenRetweet
         }else{
             return null;
         }
+    }
+
+    private function make_short_url($redirect_url)
+    {
+        $ShortUrl_obj = new ShortUrl();
+        $short_url = $ShortUrl_obj->make_short_url($redirect_url);
+        return $short_url;
     }
 
     private function isAjax()

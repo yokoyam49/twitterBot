@@ -7,7 +7,6 @@
     <title>楽天アフェリエイト リツイート予約</title>
 
     <link rel="stylesheet" href="/bootflat/css/site.min.css">
-    <link rel="stylesheet" href="/css/jquery.datetimepicker.css">
     <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
     <!-- <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'> -->
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
@@ -44,7 +43,7 @@
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
     display: none;
     padding: 30px;
-    width: 300px;
+    width: 500px;
     height: 300px;
 }
 
@@ -220,7 +219,7 @@ function item_select(item_index)
         wi = Math.floor(12 / data['search_item_result'][item_index]['mediumImageUrls'].length);
         if(wi > 4){wi = 4};
         select_item_data = {
-            "index" : index,
+            "item_index" : item_index,
             "itemName" : data['search_item_result'][item_index]['itemName'],
             "itemCaption" : data['search_item_result'][item_index]['itemCaption'],
             "shopName" : data['search_item_result'][item_index]['shopName'],
@@ -231,13 +230,32 @@ function item_select(item_index)
             "wi" : wi,
         };
         $( "#tweet-modal_content" ).tmpl(select_item_data).appendTo('#tweet-modal-content');
-        $(function() {
-            $('#datetimepicker').datetimepicker({
-              format: 'Y-m-d H:i',
-              inline: true,
-              lang: 'ja'
-            });
-        });
+        // $(function () {
+        //     $('#datetimepicker1').datetimepicker({
+        //         format : 'yyyy/MM/dd hh:mm:ss',
+        //         pickTime : false
+        //     }).data('datetimepicker');
+        // });
+    });
+}
+
+function item_tweet(item_index)
+{
+    var params = $("#form-retweet-data").serializeArray();
+    var post_data = {};
+    for(index in params){
+        if(params[index]["value"].length){
+            post_data[params[index]["name"]] = params[index]["value"];
+        }
+    }
+    post_data['select_item_index'] = item_index;
+    post_data['aff_rakuten_account_id'] = $("#aff_rakuten_account_id").val();
+    $.ajax({
+        type: "POST",
+        url: "/admin/AffRakutenRetweet/ajax_reserve_retweet/",
+        data: post_data
+    }).done(function(data){
+
     });
 }
 
@@ -255,7 +273,7 @@ function item_select(item_index)
     <input type="hidden" name="mode" value="">
     <div class="row">
         <div class="col-md-3">
-            <!--{html_options id=aff_rakuten_account name=aff_rakuten_account_id options=$rakuten_account}-->
+            <!--{html_options id=aff_rakuten_account_id name=aff_rakuten_account_id options=$rakuten_account}-->
         </div>
     </div>
     <div class="row"><div id="reserve_datetime"></div></div>
@@ -382,17 +400,19 @@ function item_select(item_index)
       </ul>
       <div id="TabContent_itemretweet" class="tab-content">
         <div class="tab-pane fade active in" id="retweet_content">
+        <form id="form-retweet-data" name="form-retweet-data">
+          <input type="hidden" name="affiliateUrl" value="${affiliateUrl}">
           <div class="row">
             {{each mediumImageUrls}}
             <div class="col-md-${wi}">
-              <input type="checkbox" name="select_img[]" value="1" />この画像を選択
+              <input type="checkbox" name="select_img[${$index}]" value="${imageUrl}" />この画像を選択
             </div>
             {{/each}}
           </div>
           <div class="row">
-          {{each mediumImageUrls}}
+            {{each mediumImageUrls}}
             <div class="col-md-${wi}"><img src="${imageUrl}" class="img-responsive"></div>
-          {{/each}}
+            {{/each}}
           </div>
           <div class="row">
             <div class="col-md-12">
@@ -402,9 +422,16 @@ function item_select(item_index)
           </div>
           <div class="row">
             <div class="col-md-6">
-              リツイート予約時刻：<input name="retweet_time" type="text" id="datetimepicker">
+                リツイート予約時間：
+                <div class="input-append date" id="datetimepicker1">
+                    <input name="retweet_time" type='text' ></input>
+                    <span class="add-on">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
             </div>
           </div>
+        </form>
         </div>
         <div class="tab-pane fade" id="retweet_item_info">
           <div class="row"><div class="col-md-12">商品名：${itemName}</div></div>
@@ -418,12 +445,11 @@ function item_select(item_index)
   <div class="modal-footer">
     <div class="row">
       <div class="col-md-2">
-        <button class="btn btn-primary" >ツイート</button>
+        <button class="btn btn-primary" onclick="item_tweet(${item_index});">ツイート</button>
       </div>
     </div>
   </div>
 </script>
 
-<script type="text/javascript" src="/js/jquery.datetimepicker.js"></script>
 </body>
 </html>
