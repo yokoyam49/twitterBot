@@ -6,8 +6,12 @@ require_once(_TWITTER_CLASS_PATH."Request.php");
 require_once(_TWITTER_CLASS_PATH."ShortUrl.php");
 require_once(_TWITTER_CLASS_PATH."View.php");
 require_once(_RAKUTEN_SDK_PATH."autoload.php");
+//require(_TWITTER_OAUTH_PATH.'src/TwitterOAuth.php');
 require_once(_TWITTER_API_PATH."statuses/statuses_update.php");
+require_once(_TWITTER_API_PATH."media/media_upload.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
+
+use Abraham\TwitterOAuth\TwitterOAuth;
 
 class Admin_AffRakutenRetweet
 {
@@ -21,7 +25,6 @@ class Admin_AffRakutenRetweet
     private $ViewObj;
     private $RequestObj;
     private $DBobj;
-    private $twObj;
     private $logFile;
 
     private $Session = array(
@@ -309,7 +312,6 @@ class Admin_AffRakutenRetweet
         //affアカウントがセットされているかチェック
         $this->check_setAffAcount();
 
-        //$twitter_account = getTwAccountInfo($this->Session['aff_rakuten_account_info']->tw_account_id);
         $twObj = new TwitterOAuth(
                 $this->aff_rakuten_account_info->tw_consumer_key,
                 $this->aff_rakuten_account_info->tw_consumer_secret,
@@ -324,7 +326,8 @@ class Admin_AffRakutenRetweet
                 $media_ids[] = $media_id;
             }
         }
-
+var_dump($media_ids);
+exit();
         //ショートURL生成
         $short_url = $this->make_short_url($this->Session['retweet_link']);
 
@@ -354,7 +357,7 @@ class Admin_AffRakutenRetweet
         }
         $item_info = $this->Session['search_item_result'][$this->Session['select_item_index']];
         $res = $this->setReserveRetweet(
-                $apires->id_str,
+                $api_res->id_str,
                 $item_info['itemName'],
                 $item_info['shopName'],
                 $reserve_id
@@ -403,8 +406,8 @@ class Admin_AffRakutenRetweet
                 $fields[] = $name." = ?";
             }
             $sql = "UPDATE aff_retweet_reserve SET ".implode(", ", $fields)." WHERE id = ?";
-            array_push($fields, $id);
-            $res = $this->DBobj->execute($sql, $fields);
+            array_push($reserve_fields, $id);
+            $res = $this->DBobj->execute($sql, $reserve_fields);
         }
         return $res;
     }
@@ -416,7 +419,15 @@ class Admin_AffRakutenRetweet
             return false;
         }
         $mediaUploadObj = new media_upload($twObj);
-        $mediaUploadObj->setMedia($media_data)->Request();
+        $api_res = $mediaUploadObj->setMedia($media_data)->Request();
+        $apiErrorObj = new Api_Error($api_res);
+        if($apiErrorObj->error){
+            $mes = $apiErrorObj->errorMes_Str;
+            header('Content-Type: application/json');
+            echo $mes;
+            exit();
+        }
+
         $media_id = $mediaUploadObj->getMediaId();
         return $media_id;
     }
