@@ -53,8 +53,7 @@ class media_upload
                     );
             }
         }
-
-        $res = $this->twObj->post(
+        $res = $this->twObj->upload(
             $this->ApiUrl,
             $this->Options
         );
