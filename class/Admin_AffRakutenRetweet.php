@@ -41,6 +41,10 @@ class Admin_AffRakutenRetweet
                     'retweet_comment' => null,
                     'retweet_link' => null,
                     'retweet_time' => null,
+                    'result' => null,
+                    'result_message' => null,
+                    'tweet_id' => null,
+                    'reserve_id' => null
             );
 
     private $api_select = array(
@@ -53,24 +57,24 @@ class Admin_AffRakutenRetweet
             );
     private $request_parms = array(
                     0 => array(
-                        'keyword',
-                        'shopCode',
-                        'itemCode',
-                        'genreId',
-                        'tagId',
-                        'page',
-                        'sort',
-                        'carrier',
-                        'field',
-                        'NGKeyword',
-                        'minAffiliateRate'
+                        array('name' => 'keyword', 'mb_name' => 'キーワード'),
+                        array('name' => 'shopCode', 'mb_name' => 'ショップコード'),
+                        array('name' => 'itemCode', 'mb_name' => 'アイテムコード'),
+                        array('name' => 'genreId', 'mb_name' => 'ジャンルID'),
+                        array('name' => 'tagId', 'mb_name' => 'タグID'),
+                        array('name' => 'page', 'mb_name' => 'ページ'),
+                        array('name' => 'sort', 'mb_name' => 'ソート'),
+                        array('name' => 'carrier', 'mb_name' => 'キャリア'),
+                        array('name' => 'field', 'mb_name' => 'フィールド'),
+                        array('name' => 'NGKeyword', 'mb_name' => 'NGワード'),
+                        array('name' => 'minAffiliateRate', 'mb_name' => '最低アフェリエイト率')
                         ),
                     1 => array(
-                        'genreId',
-                        'age',
-                        'sex',
-                        'carrier',
-                        'page'
+                        array('name' => 'genreId', 'mb_name' => 'ジャンルID'),
+                        array('name' => 'age', 'mb_name' => '年齢'),
+                        array('name' => 'sex', 'mb_name' => '性別'),
+                        array('name' => 'carrier', 'mb_name' => 'キャリア'),
+                        array('name' => 'page', 'mb_name' => 'ページ')
                         )
                 );
 
@@ -326,8 +330,7 @@ class Admin_AffRakutenRetweet
                 $media_ids[] = $media_id;
             }
         }
-var_dump($media_ids);
-exit();
+
         //ショートURL生成
         $short_url = $this->make_short_url($this->Session['retweet_link']);
 
@@ -341,33 +344,49 @@ exit();
         if(count($media_ids)){
             $option["media_ids"] = implode(',', $media_ids);
         }
+//var_dump($option);
         $api_res = $statusesUpdateObj->setOption($option)->Request();
         $apiErrorObj = new Api_Error($api_res);
         if($apiErrorObj->error){
-            $mes = $apiErrorObj->errorMes_Str;
+            $this->Session['result'] = 'Error';
+            $this->Session['result_message'] = $apiErrorObj->errorMes_Str;
+            $this->Session['tweet_id'] = '';
+            $this->Session['reserve_id'] = null;
+            $this->setSession();
             header('Content-Type: application/json');
-            echo $mes;
+            echo json_encode($this->Session);
             exit();
         }
 
-        //リツイート予約処理
-        $reserve_id = null;
-        if(!is_null($this->Session['aff_retweet_reserve_info'])){
-            $reserve_id = $this->Session['aff_retweet_reserve_info']->id;
-        }
+        //リツイート予約処理 常にinsert
+        // $reserve_id = null;
+        // if(!is_null($this->Session['aff_retweet_reserve_info'])){
+        //     $reserve_id = $this->Session['aff_retweet_reserve_info']->id;
+        // }
         $item_info = $this->Session['search_item_result'][$this->Session['select_item_index']];
         $res = $this->setReserveRetweet(
                 $api_res->id_str,
                 $item_info['itemName'],
-                $item_info['shopName'],
-                $reserve_id
+                $item_info['shopName']
             );
         if($res){
+            $this->Session['result'] = 'Success';
+            $this->Session['result_message'] = '予約完了';
+            $this->Session['tweet_id'] = $api_res->id_str;
+            $this->Session['reserve_id'] = $res;
+            $this->setSession();
             header('Content-Type: application/json');
-            echo 'success';
+            echo json_encode($this->Session);
+            exit();
         }else{
+            $this->Session['result'] = 'Error';
+            $this->Session['result_message'] = '予約テーブル挿入エラー';
+            $this->Session['tweet_id'] = $api_res->id_str;
+            $this->Session['reserve_id'] = null;
+            $this->setSession();
             header('Content-Type: application/json');
-            echo 'Error setDB retweet_reserve';
+            echo json_encode($this->Session);
+            exit();
         }
     }
 
@@ -380,7 +399,7 @@ exit();
         }
     }
 
-    private function setReserveRetweet($tweet_id, $item_name, $shop_name, $id = null)
+    private function setReserveRetweet($tweet_id, $item_name, $shop_name)
     {
         $reserve_fields = array(
                 'aff_api'               => 'rakuten',
@@ -394,32 +413,34 @@ exit();
                 'del_flg' => 0
             );
         //新規
-        if(is_null($id)){
+        // if(is_null($id)){
             $sql = "INSERT INTO aff_retweet_reserve
                     (".implode(", ", array_keys($reserve_fields)).", create_date)
                     VALUES (".implode(", ", array_fill(0, count($reserve_fields), '?')).", now())";
             $res = $this->DBobj->execute($sql, $reserve_fields);
-        //更新
-        }else{
-            $fields = array();
-            foreach($reserve_fields as $name => $value){
-                $fields[] = $name." = ?";
-            }
-            $sql = "UPDATE aff_retweet_reserve SET ".implode(", ", $fields)." WHERE id = ?";
-            array_push($reserve_fields, $id);
-            $res = $this->DBobj->execute($sql, $reserve_fields);
-        }
-        return $res;
+        // //更新
+        // }else{
+        //     $fields = array();
+        //     foreach($reserve_fields as $name => $value){
+        //         $fields[] = $name." = ?";
+        //     }
+        //     $sql = "UPDATE aff_retweet_reserve SET ".implode(", ", $fields)." WHERE id = ?";
+        //     array_push($reserve_fields, $id);
+        //     $res = $this->DBobj->execute($sql, $reserve_fields);
+        // }
+
+        //reserve_id返却
+        return $this->DBobj->getlastInsertId();
     }
 
     private function Media_Upload($twObj, $retweet_img_url)
     {
-        $media_data = file_get_contents($retweet_img_url);
-        if(!$media_data){
-            return false;
-        }
+        // $media_data = base64_encode(file_get_contents($retweet_img_url));
+        // if(!$media_data){
+        //     return false;
+        // }
         $mediaUploadObj = new media_upload($twObj);
-        $api_res = $mediaUploadObj->setMedia($media_data)->Request();
+        $api_res = $mediaUploadObj->setMedia($retweet_img_url)->Request();
         $apiErrorObj = new Api_Error($api_res);
         if($apiErrorObj->error){
             $mes = $apiErrorObj->errorMes_Str;

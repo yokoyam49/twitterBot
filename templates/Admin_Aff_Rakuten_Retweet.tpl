@@ -88,7 +88,8 @@ function api_change()
         $("#search_api_parms").removeClass("loadingMsg");
         for(index in data['search_api_parms_list']){
             parms_html = {
-                "parm_name" : data['search_api_parms_list'][index]
+                "parm_name" : data['search_api_parms_list'][index]['name'],
+                "parm_mb_name" : data['search_api_parms_list'][index]['mb_name']
             };
             $( "#api_parms" ).tmpl(parms_html).appendTo('#search_api_parms');
         }
@@ -243,6 +244,7 @@ function item_tweet(item_index)
 {
     var params = $("#form-retweet-data").serializeArray();
     var post_data = {};
+    $("#tweet-modal-content").addClass("loadingMsg");
     for(index in params){
         if(params[index]["value"].length){
             post_data[params[index]["name"]] = params[index]["value"];
@@ -255,7 +257,14 @@ function item_tweet(item_index)
         url: "/admin/AffRakutenRetweet/ajax_reserve_retweet/",
         data: post_data
     }).done(function(data){
-
+        $("#tweet-modal-content").removeClass("loadingMsg");
+        resutl_data = {
+            "result" : data['result'],
+            "message" : data['message'],
+            "tweet_id" : data['tweet_id'],
+            "reserve_id" : data['reserve_id']
+        };
+        $( "#tweet-modal_content_result" ).tmpl(resutl_data).appendTo('#tweet-modal-content');
     });
 }
 
@@ -324,7 +333,7 @@ function item_tweet(item_index)
 <script id="api_parms" type="text/x-jquery-tmpl">
 <div class="row">
     <div class="col-md-6">
-        <input type="text" name="${parm_name}" class="form-control" value="" placeholder="${parm_name}">
+        <input type="text" name="${parm_name}" class="form-control" value="" placeholder="${parm_mb_name}">
     </div>
 </div>
 </script>
@@ -446,6 +455,33 @@ function item_tweet(item_index)
     <div class="row">
       <div class="col-md-2">
         <button class="btn btn-primary" onclick="item_tweet(${item_index});">ツイート</button>
+      </div>
+    </div>
+  </div>
+</script>
+
+<!--モーダルテンプレート 完了後-->
+<script id="tweet-modal_content_result" type="text/x-jquery-tmpl">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    {{if result == 'Success'}}
+    <h4 class="modal-title">予約完了</h4>
+    {{else}}
+    <h4 class="modal-title">ERROR</h4>
+    {{/if}}
+  </div>
+
+  <div class="modal-body">
+    <div class="row"><div class="col-md-12">${message}</div></div>
+    {{if result == 'Success'}}
+    <div class="row"><div class="col-md-12"><a href="https://twitter.com/search?f=tweets&q=${tweet_id}" target="_blank">確認</a></div></div>
+    {{/if}}
+  </div>
+
+  <div class="modal-footer">
+    <div class="row">
+      <div class="col-md-2">
+        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">閉じる</button>
       </div>
     </div>
   </div>
