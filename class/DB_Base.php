@@ -381,4 +381,10 @@ class DB_Base
 		}
 	}
 
+	//インクリメントキー値取得
+	private function getlastInsertId()
+	{
+		return self::$pdo->lastInsertId();
+	}
+
 }
