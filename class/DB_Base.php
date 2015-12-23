@@ -363,10 +363,10 @@ class DB_Base
 		$this->setFetchMode($res);
 		return $res->fetchAll();
 	}
-	
+
 	//エラー情報取得
 	public function getErrorInfo(){
-		
+
 		return self::$pdo->errorInfo();
 	}
 
@@ -382,7 +382,7 @@ class DB_Base
 	}
 
 	//インクリメントキー値取得
-	private function getlastInsertId()
+	public function getlastInsertId()
 	{
 		return self::$pdo->lastInsertId();
 	}

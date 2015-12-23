@@ -68,7 +68,32 @@ var now_page = 0;
 
 $(window).load(function(){
     api_change();
+    rakuten_account_change();
 });
+
+function rakuten_account_change()
+{
+    $("#reserves").empty();
+    $("#reserves").addClass("loadingMsg");
+    $.ajax({
+        type: "POST",
+        url: "/admin/AffRakutenRetweet/ajax_account_select/",
+        data: {
+            "aff_rakuten_account_id": $("#aff_rakuten_account_id").val()
+        }
+    }).done(function(data){
+        $("#reserves").removeClass("loadingMsg");
+        for(index in data['aff_retweet_reserve_info']){
+            reserve_info = {
+                "id" : data['aff_retweet_reserve_info'][index]['id'],
+                "retweet_datetime" : data['aff_retweet_reserve_info'][index]['retweet_datetime'],
+                "reserve_item_name_mb" : data['aff_retweet_reserve_info'][index]['reserve_item_name_mb'],
+                "tweet_id" : data['aff_retweet_reserve_info'][index]['tweet_id'],
+            };
+            $( "#reserve_item" ).tmpl(reserve_info).appendTo('#reserves');
+        }
+    });
+}
 
 function api_change()
 {
@@ -116,11 +141,18 @@ function item_search()
         data: post_data
     }).done(function(data){
         $("#search_item_result").removeClass("loadingMsg");
-        max_page = data['search_item_result_max_page'];
-        now_page = data['search_item_result_now_page'];
-        show_item_result(data);
-        $("#item_result_pager").show();
-        pager_cont();
+        if(data['error'] == 'search_error'){
+            $( "#alert_box" ).tmpl({
+                "error_title" : '検索エラー 楽天ＡＰＩがエラーをレスポンスしました',
+                "error_message" : data['error_message']
+            }).appendTo('#search_item_result');
+        }else{
+            max_page = data['search_item_result_max_page'];
+            now_page = data['search_item_result_now_page'];
+            show_item_result(data);
+            $("#item_result_pager").show();
+            pager_cont();
+        }
     });
 }
 
@@ -219,6 +251,7 @@ function item_select(item_index)
         $("#tweet-modal-content").removeClass("loadingMsg");
         wi = Math.floor(12 / data['search_item_result'][item_index]['mediumImageUrls'].length);
         if(wi > 4){wi = 4};
+        now_time = new Date(jQuery.now()).toLocaleString();
         select_item_data = {
             "item_index" : item_index,
             "itemName" : data['search_item_result'][item_index]['itemName'],
@@ -229,6 +262,7 @@ function item_select(item_index)
             "affiliateUrl" : data['search_item_result'][item_index]['affiliateUrl'],
             "mediumImageUrls" : data['search_item_result'][item_index]['mediumImageUrls'],
             "wi" : wi,
+            "now_time" : now_time
         };
         $( "#tweet-modal_content" ).tmpl(select_item_data).appendTo('#tweet-modal-content');
         // $(function () {
@@ -244,6 +278,7 @@ function item_tweet(item_index)
 {
     var params = $("#form-retweet-data").serializeArray();
     var post_data = {};
+    $("#tweet-modal-content").empty();
     $("#tweet-modal-content").addClass("loadingMsg");
     for(index in params){
         if(params[index]["value"].length){
@@ -268,6 +303,21 @@ function item_tweet(item_index)
     });
 }
 
+function reserve_delete(reserve_id)
+{
+    if(window.confirm('リツイート予約を削除します')){
+        $.ajax({
+            type: "POST",
+            url: "/admin/AffRakutenRetweet/ajax_reserve_delete/",
+            data: {
+                "reserve_id": reserve_id
+            }
+        }).done(function(){
+            rakuten_account_change();
+        });
+    }
+}
+
 </script>
 
 </head>
@@ -280,12 +330,15 @@ function item_tweet(item_index)
 
 
     <input type="hidden" name="mode" value="">
-    <div class="row">
-        <div class="col-md-3">
-            <!--{html_options id=aff_rakuten_account_id name=aff_rakuten_account_id options=$rakuten_account}-->
+    <div class="well">
+        <div class="row">
+            <div class="col-md-3">
+                <!--{html_options id=aff_rakuten_account_id name=aff_rakuten_account_id options=$rakuten_account onChange="rakuten_account_change();"}-->
+            </div>
         </div>
+        <div id="reserves"></div>
     </div>
-    <div class="row"><div id="reserve_datetime"></div></div>
+
     <div class="row">
         <div class="col-md-3" id="api_select">
             <!--{html_options id=api_select_id name=api_select_id options=$api_select onChange="api_change();"}-->
@@ -329,6 +382,33 @@ function item_tweet(item_index)
 </div>
 </div>
 
+<!--アラート出力-->
+<script id="alert_box" type="text/x-jquery-tmpl">
+<div class="alert alert-danger">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <h4>${error_title}</h4>
+    ${error_message}
+</div>
+</script>
+
+<!--リツイート予約済み情報-->
+<script id="reserve_item" type="text/x-jquery-tmpl">
+<div class="row">
+    <div class="col-md-9">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">リツイート予約日時：${retweet_datetime}</h3>
+            </div>
+            <div class="panel-body">
+                <p>商品名：${reserve_item_name_mb}</p>
+                <p><a class="btn btn-primary" href="https://twitter.com/search?f=tweets&q=${tweet_id}" target="_blank">ツイート確認</a>
+                <button class="btn btn-warning" onclick="reserve_delete(${id});">この予約を削除する</button></p>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
 <!--検索パラメーター入力欄-->
 <script id="api_parms" type="text/x-jquery-tmpl">
 <div class="row">
@@ -351,13 +431,13 @@ function item_tweet(item_index)
       <div id="myTabContent_${index}" class="tab-content">
         <div class="tab-pane fade active in" id="item_img_${index}">
           <!--
-          <div class="row">
+          <div class="row"><div class="col-md-12">
             {{html small_img_tag}}
-          </div>
+          </div></div>
           -->
-          <div class="row">
+          <div class="row"><div class="col-md-12">
             {{html middle_img_tag}}
-          </div>
+          </div></div>
           <div class="row">
             <div class="col-md-2">
               <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
@@ -365,28 +445,24 @@ function item_tweet(item_index)
           </div>
         </div>
         <div class="tab-pane fade" id="item_info_${index}">
-        <div class="col-md-12">
-          <div class="row">商品名：${itemName}</div>
-          <div class="row">商品説明：${itemCaption}</div>
-          <div class="row">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div>
+          <div class="row"><div class="col-md-12">商品名：${itemName}</div></div>
+          <div class="row"><div class="col-md-12">商品説明：${itemCaption}</div></div>
+          <div class="row"><div class="col-md-12">リンク：<a href="${affiliateUrl}" target="_blank">${affiliateUrl}</a></div></div>
           <div class="row">
             <div class="col-md-2">
               <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
             </div>
           </div>
-        </div>
         </div>
         <div class="tab-pane fade" id="shop_info_${index}">
-        <div class="col-md-12">
-          <div class="row">ショップ名：${shopName}</div>
-          <div class="row">価格${itemPrice}円</div>
-          <div class="row">アフェリエイト率：${affiliateRate}%</div>
+          <div class="row"><div class="col-md-12">ショップ名：${shopName}</div></div>
+          <div class="row"><div class="col-md-12">価格${itemPrice}円</div></div>
+          <div class="row"><div class="col-md-12">アフェリエイト率：${affiliateRate}%</div></div>
           <div class="row">
             <div class="col-md-2">
               <button class="btn btn-primary" data-toggle="modal" data-target="#tweet-modal" onclick="item_select(${index});">この商品を選択</button>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>
@@ -433,7 +509,7 @@ function item_tweet(item_index)
             <div class="col-md-6">
                 リツイート予約時間：
                 <div class="input-append date" id="datetimepicker1">
-                    <input name="retweet_time" type='text' ></input>
+                    <input name="retweet_time" type='text' value="${now_time}"></input>
                     <span class="add-on">
                         <span class="glyphicon glyphicon-calendar"></span>
                     </span>

@@ -44,7 +44,9 @@ class Admin_AffRakutenRetweet
                     'result' => null,
                     'result_message' => null,
                     'tweet_id' => null,
-                    'reserve_id' => null
+                    'reserve_id' => null,
+                    'error' => null,
+                    'error_message' => null
             );
 
     private $api_select = array(
@@ -83,6 +85,7 @@ class Admin_AffRakutenRetweet
         $this->ViewObj = new View();
         $this->RequestObj = new Request();
         $this->DBobj = new DB_Base();
+        $this->logFile = 'debug_log_'.date("Y_m_d").".log";
 
         $this->Session = $_SESSION['aff_rakuten_data'];
 
@@ -134,6 +137,24 @@ class Admin_AffRakutenRetweet
         echo json_encode($this->Session);
     }
 
+    //リツイート予約削除
+    public function ajax_reserve_delete()
+    {
+        if(!$this->isAjax()){
+            echo 'no ajax';
+            exit();
+        }
+        $request = $this->RequestObj;
+        $reserve_id = $request->reserve_id;
+        $this->deleteReserveRetweet($reserve_id);
+
+        $this->Session['aff_retweet_reserve_info'] = $this->get_RetweetReserveInfo($this->Session['aff_rakuten_account_id']);
+        $this->setSession();
+
+        header('Content-Type: application/json');
+        echo json_encode($this->Session);
+    }
+
     //ajax api選択
     public function ajax_api_select()
     {
@@ -171,9 +192,9 @@ class Admin_AffRakutenRetweet
         $request = $this->RequestObj;
         $search_parms = array();
         foreach($this->Session['search_api_parms_list'] as $parm){
-            $req_param = $request->$parm;
+            $req_param = $request->$parm['name'];
             if($req_param and strlen($req_param)){
-                $search_parms[$parm] = $req_param;
+                $search_parms[$parm['name']] = $req_param;
             }
         }
         $this->Session['search_api_parms'] = $search_parms;
@@ -248,7 +269,7 @@ class Admin_AffRakutenRetweet
             $this->Session['search_item_result_now_page'] = $response['page'];
         } else {
             header('Content-Type: application/json');
-            echo 'search_error '.$response->getMessage();
+            echo json_encode(array('error' => 'search_error', 'error_message' => $response->getMessage()));
             exit();
         }
     }
@@ -267,7 +288,7 @@ class Admin_AffRakutenRetweet
             $this->Session['search_item_result_now_page'] = $response['page'];
         } else {
             header('Content-Type: application/json');
-            echo 'search_error '.$response->getMessage();
+            echo json_encode(array('error' => 'search_error', 'error_message' => $response->getMessage()));
             exit();
         }
     }
@@ -305,6 +326,7 @@ class Admin_AffRakutenRetweet
         foreach($select_img as &$img_url){
             list($img_url, ) = explode('?', $img_url);
         }
+
         $this->Session['select_img'] = $select_img;
         $this->Session['retweet_comment'] = $request->comment;
         $this->Session['retweet_link'] = $request->affiliateUrl;
@@ -325,8 +347,10 @@ class Admin_AffRakutenRetweet
 
         //画像セット
         $media_ids = array();
-        foreach($this->Session['select_img'] as $img_url){
-            if($media_id = $this->Media_Upload($twObj, $img_url)){
+        foreach($this->Session['select_img'] as $select_img_url){
+            $mes = '画像アップロード URI:'.$select_img_url."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+            if($media_id = $this->Media_Upload($twObj, $select_img_url)){
                 $media_ids[] = $media_id;
             }
         }
@@ -345,7 +369,7 @@ class Admin_AffRakutenRetweet
             $option["media_ids"] = implode(',', $media_ids);
         }
 //var_dump($option);
-        $api_res = $statusesUpdateObj->setOption($option)->Request();
+        $api_res = $statusesUpdateObj->setOption($option)->Request(); //テスト用
         $apiErrorObj = new Api_Error($api_res);
         if($apiErrorObj->error){
             $this->Session['result'] = 'Error';
@@ -358,11 +382,6 @@ class Admin_AffRakutenRetweet
             exit();
         }
 
-        //リツイート予約処理 常にinsert
-        // $reserve_id = null;
-        // if(!is_null($this->Session['aff_retweet_reserve_info'])){
-        //     $reserve_id = $this->Session['aff_retweet_reserve_info']->id;
-        // }
         $item_info = $this->Session['search_item_result'][$this->Session['select_item_index']];
         $res = $this->setReserveRetweet(
                 $api_res->id_str,
@@ -433,6 +452,13 @@ class Admin_AffRakutenRetweet
         return $this->DBobj->getlastInsertId();
     }
 
+    private function deleteReserveRetweet($id)
+    {
+        $sql = "UPDATE aff_retweet_reserve SET del_flg = 1 WHERE id = ?";
+        $res = $this->DBobj->execute($sql, array($id));
+        return $res;
+    }
+
     private function Media_Upload($twObj, $retweet_img_url)
     {
         // $media_data = base64_encode(file_get_contents($retweet_img_url));
@@ -482,11 +508,12 @@ class Admin_AffRakutenRetweet
         $sql = "SELECT *
                 FROM aff_retweet_reserve
                 WHERE del_flg = 0
+                    AND retweeted_flg = 0
                     AND aff_api = 'rakuten'
                     AND aff_api_account_id = ?";
         $res = $this->DBobj->query($sql, array($aff_rakuten_account_id));
-        if(isset($res[0])){
-            return $res[0];
+        if($res){
+            return $res;
         }else{
             return null;
         }

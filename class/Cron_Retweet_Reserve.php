@@ -26,7 +26,11 @@ class Cron_Retweet_Reserve
     public function Exec()
     {
         //リツイート予約取得
-        $this->getReserve();
+        if(!$this->getReserve()){
+            $mes = 'リツイート予約なし'."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+            return;
+        }
 
         foreach($this->Reserve_Info as $reserve){
             $mes = 'リツイート予約 ReserveID: '.$reserve->id.' RtwAccountID: '.$reserve->rtw_account_id."\n";
@@ -53,7 +57,11 @@ class Cron_Retweet_Reserve
                     AND retweeted_flg = 0
                     AND retweet_datetime <= now()";
         $res = $this->DBobj->query($sql);
+        if(!$res){
+            return false;
+        }
         $this->Reserve_Info = $res;
+        return true;
     }
 
     private function RetweetReserve($reserve)
