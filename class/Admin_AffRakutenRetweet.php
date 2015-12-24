@@ -510,7 +510,8 @@ class Admin_AffRakutenRetweet
                 WHERE del_flg = 0
                     AND retweeted_flg = 0
                     AND aff_api = 'rakuten'
-                    AND aff_api_account_id = ?";
+                    AND aff_api_account_id = ?
+                ORDER BY retweet_datetime ASC";
         $res = $this->DBobj->query($sql, array($aff_rakuten_account_id));
         if($res){
             return $res;

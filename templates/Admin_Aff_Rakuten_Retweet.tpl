@@ -83,14 +83,18 @@ function rakuten_account_change()
         }
     }).done(function(data){
         $("#reserves").removeClass("loadingMsg");
-        for(index in data['aff_retweet_reserve_info']){
-            reserve_info = {
-                "id" : data['aff_retweet_reserve_info'][index]['id'],
-                "retweet_datetime" : data['aff_retweet_reserve_info'][index]['retweet_datetime'],
-                "reserve_item_name_mb" : data['aff_retweet_reserve_info'][index]['reserve_item_name_mb'],
-                "tweet_id" : data['aff_retweet_reserve_info'][index]['tweet_id'],
-            };
-            $( "#reserve_item" ).tmpl(reserve_info).appendTo('#reserves');
+        if(data['aff_retweet_reserve_info'] == null){
+            $('#reserves').text('リツイート予約がありません。');
+        }else{
+            for(index in data['aff_retweet_reserve_info']){
+                reserve_info = {
+                    "id" : data['aff_retweet_reserve_info'][index]['id'],
+                    "retweet_datetime" : data['aff_retweet_reserve_info'][index]['retweet_datetime'],
+                    "reserve_item_name_mb" : data['aff_retweet_reserve_info'][index]['reserve_item_name_mb'],
+                    "tweet_id" : data['aff_retweet_reserve_info'][index]['tweet_id'],
+                };
+                $( "#reserve_item" ).tmpl(reserve_info).appendTo('#reserves');
+            }
         }
     });
 }
@@ -300,6 +304,7 @@ function item_tweet(item_index)
             "reserve_id" : data['reserve_id']
         };
         $( "#tweet-modal_content_result" ).tmpl(resutl_data).appendTo('#tweet-modal-content');
+        rakuten_account_change();
     });
 }
 
@@ -330,12 +335,13 @@ function reserve_delete(reserve_id)
 
 
     <input type="hidden" name="mode" value="">
-    <div class="well">
-        <div class="row">
-            <div class="col-md-3">
-                <!--{html_options id=aff_rakuten_account_id name=aff_rakuten_account_id options=$rakuten_account onChange="rakuten_account_change();"}-->
-            </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <!--{html_options id=aff_rakuten_account_id name=aff_rakuten_account_id options=$rakuten_account onChange="rakuten_account_change();"}-->
         </div>
+    </div>
+    <div class="well">
         <div id="reserves"></div>
     </div>
 
@@ -345,9 +351,11 @@ function reserve_delete(reserve_id)
         </div>
     </div>
 
-    <form id="form_search_api_parms" name="form_search_api_parms">
-        <div id="search_api_parms"></div>
-    </form>
+    <div class="well">
+        <form id="form_search_api_parms" name="form_search_api_parms">
+            <div id="search_api_parms"></div>
+        </form>
+    </div>
 
     <div id="search_item_submit" style="display: none;">
         <div class="row">
