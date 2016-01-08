@@ -89,7 +89,10 @@ class Cron_Follower_Expand_Logic
     //apiよりフォロワーリスト取得しフォロー状況をDBに反映
     public function getMyFollwerList()
     {
+        $all_follower_list = array();
         $follower_count = 0;
+        $followed_num = 0;
+        $removed_num = 0;
         $cursor = null;
         for($i = 0; $i < 20; $i++){
             $option = array(
@@ -110,8 +113,10 @@ class Cron_Follower_Expand_Logic
             }
             unset($apiErrorObj);
             //APIのレスポンスより、DBにフォロー状況反映
-            $this->DBsetFollowersData($api_res->ids);
+            $followed_num += $this->DBsetFollowersData($api_res->ids);
             $follower_count += count($api_res->ids);
+            //全フォロワーリストへ足しこみ
+            $all_follower_list = array_merge($all_follower_list, $api_res->ids);
 
             if(isset($api_res->next_cursor) and $api_res->next_cursor > 0){
                 $cursor = $api_res->next_cursor;
@@ -119,11 +124,18 @@ class Cron_Follower_Expand_Logic
                 break;
             }
         }
+
+        //リムーブされている状況のチェックとDBに反映
+        $removed_num = $this->checkRemovedDBset($all_follower_list);
+
+        $mes = date("Y-m-d H:i:s")." フォロー状況を反映しました 新規followed件数 ".$followed_num."件 removed件数 ".$removed_num."件\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+
         $mes = date("Y-m-d H:i:s")." 総取得フォロワー数 ".$follower_count."件\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
     }
 
-    //フォロー状況をDBに反映
+    //フォロー状況をDBに反映 ※5000件ごと
     private function DBsetFollowersData($follower_list){
         $followed_num = 0;
         $removed_num = 0;
@@ -139,6 +151,8 @@ class Cron_Follower_Expand_Logic
             	$followed_num = $res;
             }
         }
+
+/*
         //リムーブチェック
         $removed_user = array();
         $sql = "SELECT user_id FROM dt_follower_cont WHERE account_id = ? AND followed = 1";
@@ -168,9 +182,46 @@ class Cron_Follower_Expand_Logic
             $sql = "UPDATE dt_follower_cont SET followed = 0, removed_date = now() WHERE account_id = ? AND user_id IN ".$removed;
             $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
         }
+*/
+        return $followed_num;
+    }
 
-        $mes = date("Y-m-d H:i:s")." フォロー状況を反映しました 新規followed件数 ".$followed_num."件 removed件数 ".$removed_num."件\n";
-        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+    //リムーブされていないかチェックし、DBへ反映 ※$follower_listは5000件ごとではなく、全フォロワーIDを渡す
+    private function checkRemovedDBset($follower_list)
+    {
+        $removed_user = array();
+        //DBから全フォロワー取得
+        $sql = "SELECT user_id FROM dt_follower_cont WHERE account_id = ? AND followed = 1";
+        $res = $this->DBobj->query($sql, array($this->Account_ID));
+        //フォロー数が突然0になっている 凍結の疑い
+        if($res and count($res) and !count($follower_list)){
+            $mes = "フォロワー数が０になっています。アカウントを確認してください。\n";
+            $sql = "INSERT INTO dt_message ( account_id, type, message1, check_flg, create_date) VALUES ( ?, ?, ?, 0, now())";
+            $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $this->alert_mes_type, $mes));
+            //メール送信
+            $subject = 'アカウント：'.$this->AccountInfo->notice;
+            Alert_Mail::sendAlertMail($this->alert_mail_add, $subject, $mes);
+            //処理中止
+            throw new Exception($mes);
+        }
+        //マッピング配列
+        $listMap = array_flip($follower_list);
+
+        if($res and count($res)){
+            foreach($res as $user){
+                if(!isset($listMap[$user->user_id])){
+                    //リムーブされている
+                    $removed_user[] = $user->user_id;
+                }
+            }
+        }
+        //リムーブ状況反映
+        if(count($removed_user)){
+            $removed = "(".implode(",", $removed_user).")";
+            $sql = "UPDATE dt_follower_cont SET followed = 0, removed_date = now() WHERE account_id = ? AND user_id IN ".$removed;
+            $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+        }
+        return $removed_num;
     }
 
     //フォローを返さないuserを抽出し、規定数リムーブ
