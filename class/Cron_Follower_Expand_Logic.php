@@ -190,6 +190,7 @@ class Cron_Follower_Expand_Logic
     private function checkRemovedDBset($follower_list)
     {
         $removed_user = array();
+        $removed_num = 0;
         //DBから全フォロワー取得
         $sql = "SELECT user_id FROM dt_follower_cont WHERE account_id = ? AND followed = 1";
         $res = $this->DBobj->query($sql, array($this->Account_ID));
@@ -313,7 +314,7 @@ class Cron_Follower_Expand_Logic
         }
         $mes = date("Y-m-d H:i:s")." ".count($ActiveUser)."件 フォローしました\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
-        
+
         //ノンアクティブユーザー情報セット
         if(count($NonActiveUser)){
             $insert_value = array();
