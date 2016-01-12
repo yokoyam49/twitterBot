@@ -65,6 +65,7 @@
 <script type="text/javascript">
 var max_page = 0;
 var now_page = 0;
+var aff_account_name;
 
 $(window).load(function(){
     api_change();
@@ -96,6 +97,7 @@ function rakuten_account_change()
                 $( "#reserve_item" ).tmpl(reserve_info).appendTo('#reserves');
             }
         }
+        aff_account_name = data['aff_rakuten_account_name'];
     });
 }
 
@@ -266,7 +268,8 @@ function item_select(item_index)
             "affiliateUrl" : data['search_item_result'][item_index]['affiliateUrl'],
             "mediumImageUrls" : data['search_item_result'][item_index]['mediumImageUrls'],
             "wi" : wi,
-            "now_time" : now_time
+            "now_time" : now_time,
+            "aff_account_name" : aff_account_name
         };
         $( "#tweet-modal_content" ).tmpl(select_item_data).appendTo('#tweet-modal-content');
         // $(function () {
@@ -299,7 +302,7 @@ function item_tweet(item_index)
         $("#tweet-modal-content").removeClass("loadingMsg");
         resutl_data = {
             "result" : data['result'],
-            "message" : data['message'],
+            "message" : data['result_message'],
             "tweet_id" : data['tweet_id'],
             "reserve_id" : data['reserve_id']
         };
@@ -317,7 +320,10 @@ function reserve_delete(reserve_id)
             data: {
                 "reserve_id": reserve_id
             }
-        }).done(function(){
+        }).done(function(data){
+            if(data['result'] == 'Error'){
+                alert(data['result_message']);
+            }
             rakuten_account_change();
         });
     }
@@ -482,7 +488,7 @@ function reserve_delete(reserve_id)
 <script id="tweet-modal_content" type="text/x-jquery-tmpl">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h4 class="modal-title">ツイート＆リツイート予約</h4>
+    <h4 class="modal-title">${aff_account_name}&nbsp;&nbsp;&nbsp;&nbsp;ツイート＆リツイート予約</h4>
   </div>
 
   <div class="modal-body">
@@ -498,7 +504,7 @@ function reserve_delete(reserve_id)
           <div class="row">
             {{each mediumImageUrls}}
             <div class="col-md-${wi}">
-              <input type="checkbox" name="select_img[${$index}]" value="${imageUrl}" />この画像を選択
+              <input type="checkbox" name="select_img[${$index}]" value="${imageUrl}" checked="checked" />この画像を選択
             </div>
             {{/each}}
           </div>
@@ -509,8 +515,8 @@ function reserve_delete(reserve_id)
           </div>
           <div class="row">
             <div class="col-md-12">
-              コメント：
-              <textarea name="comment" class="form-control" rows="3"></textarea>
+              コメント：&nbsp;&nbsp;&nbsp;&nbsp;残り文字数<span id="remaining_chara">93</span>
+              <textarea name="comment" class="form-control" rows="3" onkeyup="$('#remaining_chara').text((93 - this.value.length))"></textarea>
             </div>
           </div>
           <div class="row">
@@ -549,7 +555,7 @@ function reserve_delete(reserve_id)
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
     {{if result == 'Success'}}
-    <h4 class="modal-title">予約完了</h4>
+    <h4 class="modal-title">完了</h4>
     {{else}}
     <h4 class="modal-title">ERROR</h4>
     {{/if}}

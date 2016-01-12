@@ -8,6 +8,7 @@ require_once(_TWITTER_CLASS_PATH."View.php");
 require_once(_RAKUTEN_SDK_PATH."autoload.php");
 //require(_TWITTER_OAUTH_PATH.'src/TwitterOAuth.php');
 require_once(_TWITTER_API_PATH."statuses/statuses_update.php");
+require_once(_TWITTER_API_PATH."statuses/statuses_destroy.php");
 require_once(_TWITTER_API_PATH."media/media_upload.php");
 require_once(_TWITTER_CLASS_PATH."Api_Error.php");
 
@@ -29,6 +30,7 @@ class Admin_AffRakutenRetweet
 
     private $Session = array(
                     'aff_rakuten_account_id' => null,
+                    'aff_rakuten_account_name' => null,
                     'aff_retweet_reserve_info' => array(),
                     'search_api' => null,//0->商品検索 1->ランキング
                     'search_api_parms_list' => array(),
@@ -130,6 +132,8 @@ class Admin_AffRakutenRetweet
         $request = $this->RequestObj;
         $aff_rakuten_account_id = $request->aff_rakuten_account_id;
         $this->Session['aff_rakuten_account_id'] = $aff_rakuten_account_id;
+        $this->aff_rakuten_account_info = $this->get_RakutenAccountInfo($aff_rakuten_account_id);
+        $this->Session['aff_rakuten_account_name'] = $this->aff_rakuten_account_info->account_name_mb;
         $this->Session['aff_retweet_reserve_info'] = $this->get_RetweetReserveInfo($aff_rakuten_account_id);
 
         $this->setSession();
@@ -146,7 +150,15 @@ class Admin_AffRakutenRetweet
         }
         $request = $this->RequestObj;
         $reserve_id = $request->reserve_id;
-        $this->deleteReserveRetweet($reserve_id);
+        $this->Session['result'] = null;
+        $this->Session['result_message'] = null;
+
+        try{
+            $this->deleteReserveRetweet($reserve_id);
+        }catch(Exception $e){
+            $this->Session['result'] = 'Error';
+            $this->Session['result_message'] = $e->getMessage();
+        }
 
         $this->Session['aff_retweet_reserve_info'] = $this->get_RetweetReserveInfo($this->Session['aff_rakuten_account_id']);
         $this->setSession();
@@ -390,7 +402,7 @@ class Admin_AffRakutenRetweet
             );
         if($res){
             $this->Session['result'] = 'Success';
-            $this->Session['result_message'] = '予約完了';
+            $this->Session['result_message'] = '正常にツイートできました';
             $this->Session['tweet_id'] = $api_res->id_str;
             $this->Session['reserve_id'] = $res;
             $this->setSession();
@@ -454,8 +466,36 @@ class Admin_AffRakutenRetweet
 
     private function deleteReserveRetweet($id)
     {
+        $sql = "SELECT *
+                FROM aff_retweet_reserve
+                WHERE id = ?";
+        $res = $this->DBobj->query($sql, array($id));
+        $aff_account_id = $res[0]->aff_api_account_id;
+        $del_tweet_id = $res[0]->tweet_id;
+
         $sql = "UPDATE aff_retweet_reserve SET del_flg = 1 WHERE id = ?";
         $res = $this->DBobj->execute($sql, array($id));
+
+        if($aff_account_id){
+            $aff_account_info = $this->get_RakutenAccountInfo($aff_account_id);
+            $twObj = new TwitterOAuth(
+                    $aff_account_info->tw_consumer_key,
+                    $aff_account_info->tw_consumer_secret,
+                    $aff_account_info->tw_access_token,
+                    $aff_account_info->tw_access_token_secret
+                );
+//var_dump($aff_account_info);
+//var_dump($del_tweet_id);
+            $deltweetObj = new statuses_destroy($twObj);
+            $apires = $deltweetObj->setTweetId($del_tweet_id)->Request();
+            $apiErrorObj = new Api_Error($apires);
+            if($apiErrorObj->error){
+                $error_msg = $apiErrorObj->errorMes_Str;
+                $mes = 'ツイート削除失敗: '.$error_msg."\n";
+                throw new Exception($mes);
+            }
+        }
+
         return $res;
     }
 
