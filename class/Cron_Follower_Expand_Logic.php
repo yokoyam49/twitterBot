@@ -248,8 +248,8 @@ class Cron_Follower_Expand_Logic
             return;
         }
         //リムーブ数が妙に増大
-        if($must_remove_num > ($this->Follow_Num_Inday * 2)){
-            $must_remove_num = $this->Follow_Num_Inday * 2;
+        if($must_remove_num > ($this->Follow_Num_Inday * 1)){
+            $must_remove_num = $this->Follow_Num_Inday * 1;
             $mes = 'リムーブ数が増大しています。アカウントを確認してください。';
             $sql = "INSERT INTO dt_message ( account_id, type, message1, check_flg, create_date) VALUES ( ?, ?, ?, 0, now())";
             $in_count = $this->DBobj->execute($sql, array($this->Account_ID, $this->alert_mes_type, $mes));
