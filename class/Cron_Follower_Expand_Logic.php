@@ -278,6 +278,9 @@ class Cron_Follower_Expand_Logic
         $sql = "UPDATE dt_follower_cont SET following = 0, removing_date = now() WHERE account_id = ? AND user_id IN ";
         $sql .= "( ".implode(", ", $remove_users)." )";
         $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
+
+        $mes = date("Y-m-d H:i:s")." リムーブ実行件数 ".$must_remove_num."件\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
     }
 
     //フォローターゲットを抽出し、規定数フォローしに行く
