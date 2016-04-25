@@ -261,7 +261,7 @@ class Cron_Follower_Expand_Logic
         for($i = 0; $i < $must_remove_num and $i < count($res); $i++){
             //リムーブ
             $option = array(
-                                'user_id' => $res[$i]->user_id,
+                                'user_id' => (string)$res[$i]->user_id,
                             );
             $FriendshipsDestroy = new friendships_destroy($this->twObj);
             $api_res = $FriendshipsDestroy->setOption($option)->Request();
@@ -272,7 +272,7 @@ class Cron_Follower_Expand_Logic
                 error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
             }
             unset($apiErrorObj);
-            $remove_users[] = $res[$i]->user_id;
+            $remove_users[] = (string)$res[$i]->user_id;
         }
         //リムーブ情報DBセット
         $sql = "UPDATE dt_follower_cont SET following = 0, removing_date = now() WHERE account_id = ? AND user_id IN ";
@@ -293,7 +293,7 @@ class Cron_Follower_Expand_Logic
         	$insert_value = array();
             foreach($ActiveUser as $user){
                 $option = array(
-                                    'user_id' => $user->id,
+                                    'user_id' => $user->id_str,
                                     'follow' => false
                                 );
                 $FriendshipsCreate = new friendships_create($this->twObj);
@@ -307,7 +307,7 @@ class Cron_Follower_Expand_Logic
                 }
                 unset($apiErrorObj);
                 //インサートバリュー生成
-                $values = array((string)$this->Account_ID, (string)$user->id, "1", "'".$this->getUserLastActiveTime($user)."'", "1", "0");
+                $values = array((string)$this->Account_ID, (string)$user->id_str, "1", "'".$this->getUserLastActiveTime($user)."'", "1", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now(), now() )";
             }
             //フォロー情報DBセット
@@ -322,7 +322,7 @@ class Cron_Follower_Expand_Logic
         if(count($NonActiveUser)){
             $insert_value = array();
             foreach($NonActiveUser as $user){
-                $values = array((string)$this->Account_ID, (string)$user->id, "0", "'".$this->getUserLastActiveTime($user)."'", "0", "0");
+                $values = array((string)$this->Account_ID, (string)$user->id_str, "0", "'".$this->getUserLastActiveTime($user)."'", "0", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now() )";
             }
             $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, active_user_flg, last_active_time, following, followed, create_date ) VALUES ";
