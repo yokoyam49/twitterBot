@@ -143,6 +143,11 @@ class Cron_Follower_Expand_Logic
         if(is_array($follower_list) and count($follower_list)){
             //マッピング配列
             $listMap = array_flip($follower_list);
+
+            //コーテーション追加
+            $follower_list = array_map(function($v){
+                return "'".(string)$v."'";
+            }, $follower_list);
             //フォローされている
             $follows = "(".implode(",", $follower_list).")";
             $sql = "UPDATE dt_follower_cont SET followed = 1, followed_date = now() WHERE account_id = ? AND followed = 0 AND user_id IN ".$follows;
@@ -212,7 +217,7 @@ class Cron_Follower_Expand_Logic
             foreach($res as $user){
                 if(!isset($listMap[$user->user_id])){
                     //リムーブされている
-                    $removed_user[] = $user->user_id;
+                    $removed_user[] = "'".$user->user_id."'";
                 }
             }
         }
@@ -272,14 +277,26 @@ class Cron_Follower_Expand_Logic
                 error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
             }
             unset($apiErrorObj);
-            $remove_users[] = (string)$res[$i]->user_id;
+            $remove_users[] = "'".(string)$res[$i]->user_id."'";
+            ///////////////////
+            $mes = "user_id:".(string)$res[$i]->user_id."\n";
+            error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+            //////////////////
         }
+        ///////////////////
+        $mes = "remove_users:".print_r($remove_users, true)."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        //$mes = "res:".print_r($res, true)."\n";
+        //error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        //////////////////
+
         //リムーブ情報DBセット
         $sql = "UPDATE dt_follower_cont SET following = 0, removing_date = now() WHERE account_id = ? AND user_id IN ";
         $sql .= "( ".implode(", ", $remove_users)." )";
         $removed_num = $this->DBobj->execute($sql, array($this->Account_ID));
 
         $mes = date("Y-m-d H:i:s")." リムーブ実行件数 ".$must_remove_num."件\n";
+        $mes .= date("Y-m-d H:i:s")." リムーブ成功件数 ".$removed_num."件\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
     }
 
@@ -307,7 +324,7 @@ class Cron_Follower_Expand_Logic
                 }
                 unset($apiErrorObj);
                 //インサートバリュー生成
-                $values = array((string)$this->Account_ID, (string)$user->id_str, "1", "'".$this->getUserLastActiveTime($user)."'", "1", "0");
+                $values = array((string)$this->Account_ID, "'".(string)$user->id_str."'", "1", "'".$this->getUserLastActiveTime($user)."'", "1", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now(), now() )";
             }
             //フォロー情報DBセット
@@ -322,7 +339,7 @@ class Cron_Follower_Expand_Logic
         if(count($NonActiveUser)){
             $insert_value = array();
             foreach($NonActiveUser as $user){
-                $values = array((string)$this->Account_ID, (string)$user->id_str, "0", "'".$this->getUserLastActiveTime($user)."'", "0", "0");
+                $values = array((string)$this->Account_ID, "'".(string)$user->id_str."'", "0", "'".$this->getUserLastActiveTime($user)."'", "0", "0");
                 $insert_value[] = "( ".implode(", ", $values).", now() )";
             }
             $sql = "INSERT INTO dt_follower_cont ( account_id, user_id, active_user_flg, last_active_time, following, followed, create_date ) VALUES ";
