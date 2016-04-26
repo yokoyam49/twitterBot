@@ -286,8 +286,8 @@ class Cron_Follower_Expand_Logic
         ///////////////////
         $mes = "remove_users:".print_r($remove_users, true)."\n";
         error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
-        //$mes = "res:".print_r($res, true)."\n";
-        //error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
+        $mes = "フォロワー差分数:".(string)count($res)."\n";
+        error_log($mes, 3, _TWITTER_LOG_PATH.$this->logFile);
         //////////////////
 
         //リムーブ情報DBセット
